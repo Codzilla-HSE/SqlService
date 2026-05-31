@@ -77,21 +77,42 @@ public class H2ExecutionService {
 
     /** Выполняет init-скрипт, разбивая его по ';' */
     private void executeScript(JdbcTemplate jdbc, String sql) {
-        String[] statements = sql.split(";");
-        for (String stmt : statements) {
-            String trimmed = stmt.trim();
+        String[] lines = sql.split("\\r?\\n");
+        StringBuilder currentStatement = new StringBuilder();
+        for (String line : lines) {
+            String trimmed = line.trim();
+            // Пропускаем пустые строки и строки-комментарии
             if (trimmed.isEmpty() || trimmed.startsWith("--")) {
                 continue;
             }
+            // Если строка заканчивается на ';', это конец оператора
+            if (trimmed.endsWith(";")) {
+                currentStatement.append(trimmed, 0, trimmed.length() - 1);
+                String stmt = currentStatement.toString().trim();
+                if (!stmt.isEmpty()) {
+                    try {
+                        jdbc.execute(stmt);
+                    } catch (Exception e) {
+                        throw new IllegalStateException(
+                                "Init script failed at statement: [" + stmt + "]: " + e.getMessage(), e);
+                    }
+                }
+                currentStatement.setLength(0);
+            } else {
+                currentStatement.append(trimmed).append(" ");
+            }
+        }
+        // Выполняем оставшийся оператор (если нет ';' в конце)
+        String remaining = currentStatement.toString().trim();
+        if (!remaining.isEmpty()) {
             try {
-                jdbc.execute(trimmed);
+                jdbc.execute(remaining);
             } catch (Exception e) {
                 throw new IllegalStateException(
-                        "Init script failed at statement: [" + trimmed + "]: " + e.getMessage(), e);
+                        "Init script failed at statement: [" + remaining + "]: " + e.getMessage(), e);
             }
         }
     }
-
     /** Извлекает имена таблиц из CREATE TABLE в init.sql */
     private List<String> extractTableNames(String initSql) {
         Pattern pattern = Pattern.compile("CREATE\\s+TABLE\\s+IF\\s+NOT\\s+EXISTS\\s+(\\w+)",
