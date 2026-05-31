@@ -111,13 +111,12 @@ class TaskControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
     }
-
     @Test
     void getById_notFound_shouldReturnNotFound() throws Exception {
         given(taskService.getById(99L)).willThrow(new IllegalArgumentException("Task not found: 99"));
 
         mockMvc.perform(get("/sqlservice/tasks/99"))
-                .andExpect(status().isBadRequest());  // вместо isNotFound()
+                .andExpect(status().isNotFound());   // ← меняем обратно
     }
 
     @Test
@@ -128,7 +127,7 @@ class TaskControllerTest {
         mockMvc.perform(patch("/sqlservice/tasks/99")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
-                .andExpect(status().isBadRequest());  // вместо isNotFound()
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -136,6 +135,6 @@ class TaskControllerTest {
         willThrow(new IllegalArgumentException("Task not found: 99")).given(taskService).delete(99L);
 
         mockMvc.perform(delete("/sqlservice/tasks/99"))
-                .andExpect(status().isBadRequest());  // вместо isNotFound()
+                .andExpect(status().isNotFound());
     }
 }
