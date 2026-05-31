@@ -1,10 +1,7 @@
 package com.codzilla.sqlservice.SqlService.DB;
 
-
-
 import com.codzilla.sqlservice.SqlService.model.SqlVerdict;
 import com.codzilla.sqlservice.SqlService.model.SubmissionStatus;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +18,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SqlSubmission {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long submissionId;
@@ -29,27 +27,26 @@ public class SqlSubmission {
     @JoinColumn(name = "task_id", nullable = false)
     private Task task;
 
-    @Column(name = "user_id" , nullable = false)
+    @Column(nullable = false)
     private UUID userId;
 
-    @Column(columnDefinition = "TEXT" , nullable = false)
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String userSqlQuery;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private SubmissionStatus status;
 
-    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private SqlVerdict verdict;
 
     @Column(name = "kafka_offset")
     private Long kafkaOffset;
 
-    @Column(name="error_message")
+    @Column(name = "error_message", columnDefinition = "TEXT")
     private String errorMessage;
 
-    @Column(name="rows_matched")
+    @Column(name = "rows_matched")
     private Boolean rowsMatched;
 
     @Column(name = "execution_time_ms")
@@ -59,8 +56,7 @@ public class SqlSubmission {
     private LocalDateTime createdAt;
 
     @PrePersist
-    protected  void onCreate() {
+    protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
-
 }

@@ -2,1911 +2,1109 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <title>SQLZILLA — SQL Judge</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,400;0,700;1,400&family=Playfair+Display:wght@700;900&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,900&display=swap" rel="stylesheet">
     <style>
-        :root {
-          --ruby: #A6171C;
-          --ruby-dark: #7a1015;
-          --ruby-light: #f5d0d1;
-          --natural: #D6D0C5;
-          --natural-dark: #b8b1a4;
-          --natural-light: #f0ede7;
-          --sunny: #F1C045;
-          --sunny-dark: #c99a1e;
-          --sunny-light: #fdf3d0;
-          --black: #0d0d0d;
-          --white: #fafaf8;
-          --border: 3px solid var(--black);
-          --shadow: 5px 5px 0px var(--black);
-          --shadow-lg: 8px 8px 0px var(--black);
-          --shadow-hover: 2px 2px 0px var(--black);
-          --font-display: 'Bebas Neue', sans-serif;
-          --font-mono: 'Space Mono', monospace;
-          --font-body: 'DM Sans', sans-serif;
+        :root{
+          --bone:#F1E4D1; --bone-d:#e0cdb5; --bone-dd:#c9b49a;
+          --blue:#D0E6FD; --blue-d:#a8cffa; --blue-dd:#7ab5f7;
+          --royal:#162660; --royal-l:#1e3380; --royal-ll:#243d9a;
+          --acc:#e84040;
+          --sun:#f5c842;
+          --grn:#2dca6e;
+          --wht:#ffffff;
+          --brd:2.5px solid var(--royal);
+          --sh:4px 4px 0 var(--royal);
+          --sh-lg:7px 7px 0 var(--royal);
+          --sh-sm:2px 2px 0 var(--royal);
+          --fd:'Bebas Neue',sans-serif;
+          --fm:'IBM Plex Mono',monospace;
+          --fp:'Playfair Display',serif;
+          --fb:'DM Sans',sans-serif;
+          --r:6px;
         }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        html{scroll-behavior:smooth}
+        body{font-family:var(--fb);background:var(--bone);color:var(--royal);overflow-x:hidden}
+        ::-webkit-scrollbar{width:7px}
+        ::-webkit-scrollbar-track{background:var(--bone-d)}
+        ::-webkit-scrollbar-thumb{background:var(--royal);border-radius:0}
 
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        /* ── CURSOR ── */
+        .cur{position:fixed;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);mix-blend-mode:multiply}
+        .cur-d{width:14px;height:14px;background:var(--royal);border-radius:50%;transition:width .15s,height .15s,background .2s}
+        .cur-r{position:fixed;width:36px;height:36px;border:2.5px solid var(--royal);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .18s,height .18s}
 
-        html { scroll-behavior: smooth; }
+        /* ── PROGRESS BAR ── */
+        #prog{position:fixed;top:0;left:0;height:3px;background:var(--acc);z-index:9000;transition:width .08s;box-shadow:0 0 8px var(--acc)}
 
-        body {
-          font-family: var(--font-body);
-          background: var(--natural-light);
-          color: var(--black);
-          overflow-x: hidden;
-          cursor: crosshair;
-        }
+        /* ── HERO ── */
+        .hero{min-height:100vh;background:var(--royal);position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:center;padding:0 8vw}
+        .hero-scanlines{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,255,255,.015) 3px,rgba(255,255,255,.015) 4px);pointer-events:none}
+        .hero-dots{position:absolute;inset:0;background-image:radial-gradient(rgba(208,230,253,.12) 1px,transparent 1px);background-size:28px 28px;pointer-events:none}
+        .hero-title{font-family:var(--fd);font-size:clamp(5rem,16vw,15rem);line-height:.88;color:var(--bone);letter-spacing:1px;position:relative;z-index:2}
+        .hero-title .t-blue{color:var(--blue)}
+        .hero-title .t-out{-webkit-text-stroke:2px var(--blue);color:transparent}
+        .hero-sub{font-family:var(--fm);font-size:.88rem;color:var(--blue-d);max-width:500px;line-height:1.7;margin-top:1.5rem;margin-bottom:2rem;position:relative;z-index:2;opacity:0;animation:fadeUp .8s ease forwards .6s}
+        .hero-badges{display:flex;gap:1rem;flex-wrap:wrap;position:relative;z-index:2;opacity:0;animation:fadeUp .8s ease forwards .8s}
+        .hero-badge-item{font-family:var(--fm);font-size:.68rem;letter-spacing:2px;text-transform:uppercase;border:2px solid var(--blue);color:var(--blue);padding:5px 12px}
+        .hero-stat{position:absolute;right:8vw;top:50%;transform:translateY(-50%);z-index:2}
+        .hero-stat-box{width:200px;height:200px;border:2.5px solid var(--blue);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(208,230,253,.06);animation:floatStat 7s ease-in-out infinite}
+        .hero-stat-num{font-family:var(--fd);font-size:5rem;color:var(--sun);line-height:1}
+        .hero-stat-lbl{font-family:var(--fm);font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--blue-d);margin-top:.3rem;text-align:center}
+        @keyframes floatStat{0%,100%{transform:translateY(-50%) rotate(-2deg)}50%{transform:translateY(calc(-50% - 16px)) rotate(2deg)}}
 
-        /* ─── SCROLLBAR ─── */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--natural); }
-        ::-webkit-scrollbar-thumb { background: var(--black); }
+        /* ticker */
+        .ticker{position:absolute;bottom:0;left:0;right:0;overflow:hidden;background:var(--blue);border-top:2.5px solid var(--royal);padding:8px 0}
+        .ticker-inner{display:flex;animation:tick 22s linear infinite;white-space:nowrap}
+        .ticker-item{font-family:var(--fd);font-size:1.4rem;letter-spacing:2px;color:var(--royal);padding:0 2rem}
+        .ticker-item::after{content:' ◆ ';color:var(--acc)}
+        @keyframes tick{to{transform:translateX(-50%)}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
 
-        /* ─── NOISE TEXTURE OVERLAY ─── */
-        body::before {
-          content: '';
-          position: fixed;
-          inset: 0;
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-          pointer-events: none;
-          z-index: 9999;
-        }
+        /* ── APP SHELL ── */
+        .app-shell{padding:3rem 4vw 6rem;max-width:1400px;margin:0 auto}
 
-        /* ─── CURSOR ─── */
-        .cursor-dot {
-          position: fixed;
-          width: 12px; height: 12px;
-          background: var(--ruby);
-          border: 2px solid var(--black);
-          border-radius: 50%;
-          pointer-events: none;
-          z-index: 10000;
-          transform: translate(-50%, -50%);
-          transition: transform 0.1s, width 0.2s, height 0.2s, background 0.2s;
-        }
-        .cursor-ring {
-          position: fixed;
-          width: 36px; height: 36px;
-          border: 2px solid var(--black);
-          border-radius: 50%;
-          pointer-events: none;
-          z-index: 9998;
-          transform: translate(-50%, -50%);
-          transition: transform 0.15s ease-out, width 0.2s, height 0.2s;
-        }
+        /* ── MAC WINDOW ── */
+        .mac-win{border:var(--brd);background:var(--wht);box-shadow:var(--sh-lg);border-radius:var(--r);overflow:hidden;margin-bottom:2.5rem}
+        .mac-win.blue-bg{background:var(--blue)}
+        .mac-win.royal-bg{background:var(--royal)}
+        .mac-titlebar{background:var(--bone-d);border-bottom:var(--brd);padding:.55rem 1rem;display:flex;align-items:center;gap:.6rem;position:relative;user-select:none}
+        .mac-titlebar.dark{background:var(--royal)}
+        .mac-titlebar.blue{background:var(--blue-d)}
+        .mac-btn-wrap{display:flex;gap:.45rem}
+        .mac-btn{width:13px;height:13px;border-radius:50%;border:1.5px solid rgba(0,0,0,.25);cursor:pointer;transition:filter .15s,transform .15s}
+        .mac-btn:hover{filter:brightness(.8);transform:scale(1.1)}
+        .mac-btn.red{background:#ff5f57}
+        .mac-btn.yel{background:#ffbd2e}
+        .mac-btn.grn{background:#28c840}
+        .mac-win-title{position:absolute;left:50%;transform:translateX(-50%);font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--royal);opacity:.6}
+        .mac-titlebar.dark .mac-win-title{color:var(--bone);opacity:.5}
+        .mac-content{padding:1.4rem}
 
-        /* ─── NAVBAR ─── */
-        nav {
-          position: sticky;
-          top: 0;
-          z-index: 100;
-          background: var(--black);
-          border-bottom: 3px solid var(--sunny);
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 2rem;
-          height: 64px;
-        }
-        .nav-logo {
-          font-family: var(--font-display);
-          font-size: 2.2rem;
-          color: var(--sunny);
-          letter-spacing: 2px;
-          cursor: pointer;
-        }
-        .nav-logo span { color: var(--ruby); }
-        .nav-links { display: flex; gap: 0; }
-        .nav-link {
-          font-family: var(--font-mono);
-          font-size: 0.75rem;
-          color: var(--natural);
-          text-transform: uppercase;
-          letter-spacing: 1px;
-          padding: 0 1.2rem;
-          height: 64px;
-          display: flex;
-          align-items: center;
-          cursor: pointer;
-          border-left: 1px solid rgba(255,255,255,0.1);
-          transition: background 0.2s, color 0.2s;
-          text-decoration: none;
-        }
-        .nav-link:hover { background: var(--ruby); color: var(--white); }
-        .nav-link.active { background: var(--sunny); color: var(--black); font-weight: 700; }
+        /* ── TABS NAV ── */
+        .tabs-nav{background:var(--royal);border-bottom:var(--brd);display:flex;align-items:stretch;position:sticky;top:0;z-index:500;box-shadow:0 3px 0 var(--blue)}
+        .tab-btn{font-family:var(--fm);font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--blue-d);padding:0 1.4rem;height:52px;display:flex;align-items:center;cursor:pointer;border:none;background:transparent;border-right:1.5px solid rgba(208,230,253,.15);transition:background .2s,color .2s;position:relative;white-space:nowrap}
+        .tab-btn:hover{background:rgba(208,230,253,.08);color:var(--blue)}
+        .tab-btn.active{background:var(--bone);color:var(--royal);font-weight:700}
+        .tab-btn.active::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--acc)}
+        .tab-logo{font-family:var(--fd);font-size:1.8rem;color:var(--sun);letter-spacing:2px;padding:0 1.4rem;display:flex;align-items:center;border-right:2px solid rgba(208,230,253,.15);cursor:pointer}
+        .tab-logo span{color:var(--acc)}
 
-        /* ─── HERO ─── */
-        .hero {
-          min-height: 100vh;
-          position: relative;
-          overflow: hidden;
-          display: flex;
-          align-items: center;
-          background: var(--black);
-        }
-        .hero-bg-grid {
-          position: absolute;
-          inset: 0;
-          background-image:
-            linear-gradient(rgba(241,192,69,0.08) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(241,192,69,0.08) 1px, transparent 1px);
-          background-size: 60px 60px;
-          animation: gridFloat 20s linear infinite;
-        }
-        @keyframes gridFloat {
-          0% { transform: translate(0,0); }
-          100% { transform: translate(60px, 60px); }
-        }
-        .hero-ticker {
-          position: absolute;
-          bottom: 80px;
-          left: 0;
-          right: 0;
-          overflow: hidden;
-          border-top: 3px solid var(--sunny);
-          border-bottom: 3px solid var(--sunny);
-          background: var(--sunny);
-          padding: 10px 0;
-        }
-        .hero-ticker-inner {
-          display: flex;
-          gap: 0;
-          animation: tickerScroll 18s linear infinite;
-          white-space: nowrap;
-        }
-        .hero-ticker-item {
-          font-family: var(--font-display);
-          font-size: 1.6rem;
-          letter-spacing: 2px;
-          color: var(--black);
-          padding: 0 2rem;
-        }
-        .hero-ticker-item::after { content: ' ★ '; color: var(--ruby); }
-        @keyframes tickerScroll {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .hero-content {
-          position: relative;
-          z-index: 2;
-          padding: 0 8vw;
-          max-width: 900px;
-        }
-        .hero-eyebrow {
-          font-family: var(--font-mono);
-          font-size: 0.8rem;
-          color: var(--sunny);
-          letter-spacing: 4px;
-          text-transform: uppercase;
-          margin-bottom: 1.5rem;
-          opacity: 0;
-          animation: fadeUp 0.6s ease forwards 0.2s;
-        }
-        .hero-title {
-          font-family: var(--font-display);
-          font-size: clamp(5rem, 13vw, 13rem);
-          line-height: 0.9;
-          color: var(--white);
-          margin-bottom: 1rem;
-          opacity: 0;
-          animation: fadeUp 0.8s ease forwards 0.4s;
-        }
-        .hero-title .accent { color: var(--ruby); -webkit-text-stroke: 0px; }
-        .hero-title .outline {
-          -webkit-text-stroke: 3px var(--sunny);
-          color: transparent;
-        }
-        .hero-sub {
-          font-family: var(--font-body);
-          font-size: 1.15rem;
-          color: var(--natural);
-          max-width: 480px;
-          line-height: 1.6;
-          margin-bottom: 2.5rem;
-          opacity: 0;
-          animation: fadeUp 0.8s ease forwards 0.6s;
-        }
-        .hero-buttons {
-          display: flex;
-          gap: 1rem;
-          flex-wrap: wrap;
-          opacity: 0;
-          animation: fadeUp 0.8s ease forwards 0.8s;
-        }
-        .hero-floating-badge {
-          position: absolute;
-          right: 8vw;
-          top: 50%;
-          transform: translateY(-50%);
-          animation: float 6s ease-in-out infinite, fadeUp 1s ease forwards 1s;
-          opacity: 0;
-        }
-        .badge-circle {
-          width: 220px; height: 220px;
-          border: 3px solid var(--sunny);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-direction: column;
-          background: var(--ruby);
-          box-shadow: 8px 8px 0 var(--sunny);
-          text-align: center;
-          padding: 1.5rem;
-        }
-        .badge-circle .badge-num {
-          font-family: var(--font-display);
-          font-size: 4rem;
-          color: var(--sunny);
-          line-height: 1;
-        }
-        .badge-circle .badge-label {
-          font-family: var(--font-mono);
-          font-size: 0.65rem;
-          color: var(--natural);
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          margin-top: 0.3rem;
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(-50%) rotate(-3deg); }
-          50% { transform: translateY(calc(-50% - 20px)) rotate(3deg); }
-        }
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(40px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
+        /* ── TAB PANELS ── */
+        .tab-panel{display:none}
+        .tab-panel.active{display:block;animation:panelIn .3s ease}
+        @keyframes panelIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 
-        /* ─── BUTTONS ─── */
-        .btn {
-          font-family: var(--font-mono);
-          font-size: 0.85rem;
-          font-weight: 700;
-          letter-spacing: 1px;
-          text-transform: uppercase;
-          padding: 14px 28px;
-          border: var(--border);
-          cursor: pointer;
-          transition: transform 0.1s, box-shadow 0.1s, background 0.15s;
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          text-decoration: none;
-          position: relative;
-        }
-        .btn:hover { transform: translate(-2px, -2px); box-shadow: var(--shadow); }
-        .btn:active { transform: translate(1px, 1px); box-shadow: var(--shadow-hover); }
-        .btn-primary { background: var(--sunny); color: var(--black); box-shadow: var(--shadow); }
-        .btn-primary:hover { background: var(--ruby); color: var(--white); }
-        .btn-secondary { background: transparent; color: var(--white); }
-        .btn-secondary:hover { background: var(--natural); color: var(--black); }
-        .btn-ruby { background: var(--ruby); color: var(--white); box-shadow: var(--shadow); }
-        .btn-ruby:hover { background: var(--ruby-dark); }
-        .btn-ghost { background: transparent; color: var(--black); }
-        .btn-ghost:hover { background: var(--sunny); }
-        .btn-sm { font-size: 0.75rem; padding: 8px 16px; }
-        .btn-loading::after {
-          content: '';
-          width: 14px; height: 14px;
-          border: 2px solid currentColor;
-          border-top-color: transparent;
-          border-radius: 50%;
-          animation: spin 0.7s linear infinite;
-          margin-left: 6px;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        /* ── GRID LAYOUTS ── */
+        .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+        .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem}
+        .grid-auto{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.2rem}
+        @media(max-width:768px){.grid-2,.grid-3{grid-template-columns:1fr}}
 
-        /* ─── SECTIONS ─── */
-        section { padding: 6rem 8vw; }
-        .section-header {
-          display: flex;
-          align-items: baseline;
-          gap: 1.5rem;
-          margin-bottom: 3rem;
-          border-bottom: var(--border);
-          padding-bottom: 1rem;
-        }
-        .section-num {
-          font-family: var(--font-display);
-          font-size: 4rem;
-          color: var(--ruby);
-          line-height: 1;
-        }
-        .section-title {
-          font-family: var(--font-display);
-          font-size: 3.5rem;
-          letter-spacing: 1px;
-        }
-        .section-tag {
-          font-family: var(--font-mono);
-          font-size: 0.7rem;
-          color: var(--white);
-          background: var(--black);
-          padding: 4px 10px;
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          margin-left: auto;
-        }
+        /* ── REVEAL ── */
+        .reveal{opacity:0;transform:translateY(24px);transition:opacity .5s ease,transform .5s ease}
+        .reveal.vis{opacity:1;transform:none}
 
-        /* ─── TASKS SECTION ─── */
-        #tasks-section { background: var(--white); }
-        .tasks-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-          gap: 1.5rem;
-        }
-        .task-card {
-          border: var(--border);
-          background: var(--natural-light);
-          padding: 1.5rem;
-          position: relative;
-          cursor: pointer;
-          transition: transform 0.15s, box-shadow 0.15s;
-          box-shadow: var(--shadow);
-          opacity: 0;
-          transform: translateY(30px);
-        }
-        .task-card.visible {
-          animation: cardReveal 0.5s ease forwards;
-        }
-        @keyframes cardReveal {
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .task-card:hover { transform: translate(-4px, -4px); box-shadow: var(--shadow-lg); }
-        .task-card-type {
-          font-family: var(--font-mono);
-          font-size: 0.65rem;
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          background: var(--sunny);
-          border: 2px solid var(--black);
-          color: var(--black);
-          padding: 3px 8px;
-          display: inline-block;
-          margin-bottom: 0.8rem;
-          font-weight: 700;
-        }
-        .task-card-type.DML { background: var(--ruby); color: var(--white); }
-        .task-card-type.DDL { background: var(--black); color: var(--sunny); }
-        .task-card-type.DCL { background: var(--natural-dark); }
-        .task-card-type.TCL { background: var(--ruby-light); color: var(--ruby-dark); }
-        .task-card h3 {
-          font-family: var(--font-display);
-          font-size: 1.8rem;
-          margin-bottom: 0.5rem;
-          line-height: 1.1;
-        }
-        .task-card p {
-          font-size: 0.9rem;
-          color: #555;
-          line-height: 1.5;
-          margin-bottom: 1rem;
-        }
-        .task-card-footer {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          border-top: 2px solid var(--black);
-          padding-top: 0.8rem;
-          margin-top: 0.5rem;
-        }
-        .task-card-time {
-          font-family: var(--font-mono);
-          font-size: 0.7rem;
-          color: #666;
-        }
-        .task-card-corner {
-          position: absolute;
-          top: -3px; right: -3px;
-          width: 0; height: 0;
-          border-left: 20px solid transparent;
-          border-top: 20px solid var(--ruby);
-          transition: border-top-color 0.2s;
-        }
-        .task-card:hover .task-card-corner { border-top-color: var(--sunny); }
+        /* ── BUTTONS ── */
+        .btn{font-family:var(--fm);font-size:.78rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:11px 22px;border:var(--brd);cursor:pointer;transition:transform .1s,box-shadow .1s,background .15s;display:inline-flex;align-items:center;gap:7px;text-decoration:none}
+        .btn:hover{transform:translate(-2px,-2px);box-shadow:var(--sh)}
+        .btn:active{transform:translate(1px,1px);box-shadow:var(--sh-sm)}
+        .btn-royal{background:var(--royal);color:var(--bone);box-shadow:var(--sh)}
+        .btn-royal:hover{background:var(--royal-l);color:var(--bone)}
+        .btn-bone{background:var(--bone);color:var(--royal);box-shadow:var(--sh)}
+        .btn-blue{background:var(--blue);color:var(--royal);box-shadow:var(--sh)}
+        .btn-blue:hover{background:var(--blue-d)}
+        .btn-acc{background:var(--acc);color:var(--wht);box-shadow:var(--sh)}
+        .btn-ghost{background:transparent;color:var(--royal);border:var(--brd)}
+        .btn-ghost:hover{background:var(--blue)}
+        .btn-sm{font-size:.68rem;padding:7px 14px}
+        .btn-full{width:100%}
+        .btn-loading::after{content:'';width:12px;height:12px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;margin-left:5px}
+        @keyframes spin{to{transform:rotate(360deg)}}
 
-        /* ─── SUBMIT SECTION ─── */
-        #submit-section { background: var(--natural); }
-        .submit-layout {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 2rem;
-          align-items: start;
-        }
-        @media (max-width: 768px) { .submit-layout { grid-template-columns: 1fr; } }
-        .panel {
-          border: var(--border);
-          background: var(--white);
-          box-shadow: var(--shadow-lg);
-        }
-        .panel-header {
-          background: var(--black);
-          color: var(--sunny);
-          font-family: var(--font-display);
-          font-size: 1.4rem;
-          letter-spacing: 2px;
-          padding: 0.8rem 1.2rem;
-          border-bottom: var(--border);
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-        .panel-header .dot {
-          width: 10px; height: 10px;
-          border-radius: 50%;
-          background: var(--ruby);
-          display: inline-block;
-          margin-right: 6px;
-          animation: pulse 2s ease-in-out infinite;
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50%       { opacity: 0.5; transform: scale(1.3); }
-        }
-        .panel-body { padding: 1.5rem; }
-        .form-group { margin-bottom: 1.2rem; }
-        .form-label {
-          font-family: var(--font-mono);
-          font-size: 0.72rem;
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          color: #555;
-          display: block;
-          margin-bottom: 6px;
-        }
-        .form-input, .form-select {
-          width: 100%;
-          border: var(--border);
-          background: var(--natural-light);
-          font-family: var(--font-mono);
-          font-size: 0.85rem;
-          padding: 10px 14px;
-          outline: none;
-          transition: box-shadow 0.15s, background 0.15s;
-          appearance: none;
-          color: var(--black);
-        }
-        .form-input:focus, .form-select:focus {
-          background: var(--sunny-light);
-          box-shadow: 4px 4px 0 var(--ruby);
-        }
-        .form-textarea {
-          width: 100%;
-          border: var(--border);
-          background: var(--black);
-          color: #00ff88;
-          font-family: var(--font-mono);
-          font-size: 0.82rem;
-          padding: 1rem;
-          min-height: 200px;
-          resize: vertical;
-          outline: none;
-          line-height: 1.6;
-          transition: box-shadow 0.15s;
-        }
-        .form-textarea:focus { box-shadow: 4px 4px 0 var(--sunny); }
-        .form-textarea::placeholder { color: #444; }
-        .verdict-display {
-          border: var(--border);
-          min-height: 200px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-direction: column;
-          gap: 0.5rem;
-          background: var(--natural-light);
-          position: relative;
-          overflow: hidden;
-        }
-        .verdict-display.accepted { background: #e8f8e8; }
-        .verdict-display.wrong    { background: var(--ruby-light); }
-        .verdict-display.pending  { background: var(--sunny-light); }
-        .verdict-icon {
-          font-size: 4rem;
-          animation: bounceIn 0.5s cubic-bezier(0.36,0.07,0.19,0.97);
-        }
-        @keyframes bounceIn {
-          0%   { transform: scale(0) rotate(-20deg); }
-          60%  { transform: scale(1.2) rotate(5deg); }
-          100% { transform: scale(1) rotate(0deg); }
-        }
-        .verdict-text {
-          font-family: var(--font-display);
-          font-size: 2.5rem;
-          letter-spacing: 2px;
-        }
-        .verdict-sub {
-          font-family: var(--font-mono);
-          font-size: 0.75rem;
-          color: #666;
-          letter-spacing: 1px;
-        }
-        .verdict-bar {
-          position: absolute;
-          bottom: 0; left: 0;
-          height: 5px;
-          background: var(--ruby);
-          transition: width 1s ease;
-        }
+        /* ── FORMS ── */
+        .fg{margin-bottom:1rem}
+        .fl{font-family:var(--fm);font-size:.66rem;letter-spacing:2px;text-transform:uppercase;color:var(--royal);opacity:.65;display:block;margin-bottom:5px}
+        .fi,.fs{width:100%;border:var(--brd);background:var(--bone);font-family:var(--fm);font-size:.82rem;padding:9px 12px;outline:none;color:var(--royal);border-radius:0;appearance:none;transition:box-shadow .15s,background .15s}
+        .fi:focus,.fs:focus{background:var(--blue);box-shadow:3px 3px 0 var(--royal)}
+        .ft{width:100%;border:var(--brd);background:var(--royal);color:#a8d4ff;font-family:var(--fm);font-size:.78rem;padding:1rem;min-height:160px;resize:vertical;outline:none;line-height:1.65;transition:box-shadow .15s}
+        .ft:focus{box-shadow:3px 3px 0 var(--acc)}
+        .ft::placeholder{color:#3a5080}
+        .ft.init-sql{color:#88ccff}
+        .ft.val-code{color:#ffcc88;min-height:120px}
 
-        /* ─── LEADERBOARD ─── */
-        #leaderboard-section { background: var(--black); color: var(--white); }
-        #leaderboard-section .section-title { color: var(--sunny); }
-        #leaderboard-section .section-num { color: var(--ruby); }
-        #leaderboard-section .section-header { border-color: var(--sunny); }
-        .leaderboard-table {
-          width: 100%;
-          border-collapse: collapse;
-          font-family: var(--font-mono);
-          font-size: 0.82rem;
-        }
-        .leaderboard-table thead tr {
-          background: var(--ruby);
-          border: var(--border);
-          border-color: var(--sunny);
-        }
-        .leaderboard-table th {
-          padding: 12px 16px;
-          text-align: left;
-          font-size: 0.68rem;
-          letter-spacing: 3px;
-          text-transform: uppercase;
-          color: var(--sunny);
-          border-right: 1px solid rgba(255,255,255,0.2);
-        }
-        .leaderboard-table tbody tr {
-          border-bottom: 1px solid rgba(255,255,255,0.08);
-          transition: background 0.2s;
-        }
-        .leaderboard-table tbody tr:hover { background: rgba(241,192,69,0.05); }
-        .leaderboard-table td {
-          padding: 14px 16px;
-          border-right: 1px solid rgba(255,255,255,0.05);
-          color: var(--natural);
-        }
-        .leaderboard-table tbody tr:nth-child(1) td:first-child { color: var(--sunny); font-weight: 700; }
-        .leaderboard-table tbody tr:nth-child(2) td:first-child { color: var(--natural); }
-        .leaderboard-table tbody tr:nth-child(3) td:first-child { color: #cd7f32; }
-        .verdict-badge {
-          display: inline-block;
-          font-size: 0.65rem;
-          letter-spacing: 1.5px;
-          text-transform: uppercase;
-          padding: 3px 8px;
-          border: 1.5px solid;
-          font-weight: 700;
-        }
-        .verdict-badge.ac  { color: #00ff88; border-color: #00ff88; }
-        .verdict-badge.wa  { color: var(--ruby); border-color: var(--ruby); }
-        .verdict-badge.tl  { color: var(--sunny); border-color: var(--sunny); }
-        .verdict-badge.ce  { color: #ff6b6b; border-color: #ff6b6b; }
-        .verdict-badge.re  { color: #aaa; border-color: #aaa; }
-        .leaderboard-filter {
-          display: flex;
-          gap: 0.8rem;
-          margin-bottom: 1.5rem;
-          flex-wrap: wrap;
-        }
-        .filter-btn {
-          font-family: var(--font-mono);
-          font-size: 0.7rem;
-          letter-spacing: 1.5px;
-          text-transform: uppercase;
-          padding: 6px 14px;
-          border: 1.5px solid rgba(255,255,255,0.2);
-          background: transparent;
-          color: var(--natural);
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        .filter-btn:hover, .filter-btn.active {
-          border-color: var(--sunny);
-          color: var(--sunny);
-          background: rgba(241,192,69,0.1);
-        }
+        /* ── TASK CARDS ── */
+        .task-card{border:var(--brd);background:var(--wht);padding:1.3rem;position:relative;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:var(--sh);opacity:0;transform:translateY(20px)}
+        .task-card.vis{animation:cardIn .4s ease forwards}
+        @keyframes cardIn{to{opacity:1;transform:none}}
+        .task-card:hover{transform:translate(-3px,-3px);box-shadow:var(--sh-lg);background:var(--bone)}
+        .task-type{font-family:var(--fm);font-size:.6rem;letter-spacing:2px;text-transform:uppercase;padding:3px 8px;border:2px solid var(--royal);display:inline-block;margin-bottom:.7rem;font-weight:700}
+        .task-type.DQL{background:var(--blue);color:var(--royal)}
+        .task-type.DML{background:var(--royal);color:var(--bone)}
+        .task-type.DDL{background:var(--acc);color:var(--wht)}
+        .task-card h3{font-family:var(--fp);font-size:1.3rem;margin-bottom:.4rem;line-height:1.2}
+        .task-card p{font-size:.85rem;color:#555;line-height:1.5;margin-bottom:.8rem}
+        .task-footer{display:flex;align-items:center;justify-content:space-between;border-top:2px solid var(--bone-d);padding-top:.7rem}
+        .task-meta{font-family:var(--fm);font-size:.65rem;color:#888}
+        .task-corner{position:absolute;top:-2.5px;right:-2.5px;width:0;height:0;border-left:16px solid transparent;border-top:16px solid var(--acc);transition:border-top-color .2s}
+        .task-card:hover .task-corner{border-top-color:var(--blue-dd)}
+        .badge-h2{font-family:var(--fm);font-size:.55rem;letter-spacing:1.5px;background:var(--royal);color:#88ccff;padding:2px 5px;border:1.5px solid #88ccff;margin-left:5px}
+        .badge-custom{font-family:var(--fm);font-size:.55rem;letter-spacing:1.5px;background:transparent;color:var(--sun);border:1.5px solid var(--sun);padding:2px 5px;margin-left:3px}
 
-        /* ─── ADMIN SECTION ─── */
-        #admin-section { background: var(--natural-light); }
-        .admin-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 2rem;
-        }
-        @media (max-width: 768px) { .admin-grid { grid-template-columns: 1fr; } }
+        /* ── PIPELINE ── */
+        .pipeline{display:flex;border:var(--brd);margin-bottom:1rem;overflow:hidden}
+        .ps{flex:1;padding:7px 4px;text-align:center;font-family:var(--fm);font-size:.58rem;letter-spacing:.8px;text-transform:uppercase;border-right:2px solid var(--royal);background:var(--bone);color:#888;transition:background .3s,color .3s;line-height:1.3}
+        .ps:last-child{border-right:none}
+        .ps.active{background:var(--blue);color:var(--royal);font-weight:700}
+        .ps.done{background:var(--royal);color:var(--grn)}
+        .ps.err{background:var(--acc);color:var(--wht)}
 
-        /* ─── STATUS SECTION ─── */
-        #status-section { background: var(--sunny); }
-        #status-section .section-title { color: var(--black); }
-        .status-lookup {
-          display: flex;
-          gap: 0;
-          max-width: 500px;
-          margin-bottom: 2rem;
-        }
-        .status-lookup input {
-          flex: 1;
-          border: var(--border);
-          border-right: none;
-          background: var(--white);
-          font-family: var(--font-mono);
-          font-size: 0.9rem;
-          padding: 14px 16px;
-          outline: none;
-        }
-        .status-lookup .btn { border-left: none; }
-        .status-cards {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-          gap: 1rem;
-        }
-        .status-card {
-          border: var(--border);
-          background: var(--white);
-          padding: 1.2rem;
-          box-shadow: var(--shadow);
-          transform: translateY(20px);
-          opacity: 0;
-          transition: transform 0.4s ease, opacity 0.4s ease, box-shadow 0.15s;
-        }
-        .status-card.show { transform: translateY(0); opacity: 1; }
-        .status-card:hover { box-shadow: var(--shadow-lg); transform: translate(-3px,-3px); }
-        .status-card-label {
-          font-family: var(--font-mono);
-          font-size: 0.65rem;
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          color: #666;
-          margin-bottom: 4px;
-        }
-        .status-card-value {
-          font-family: var(--font-display);
-          font-size: 1.8rem;
-          line-height: 1;
-        }
+        /* ── VERDICT BOX ── */
+        .verdict-box{border:var(--brd);min-height:170px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.45rem;background:var(--bone);position:relative;overflow:hidden;transition:background .3s}
+        .verdict-box.ac{background:#d4f8e0}
+        .verdict-box.wa{background:#fde0e0}
+        .verdict-box.pend{background:var(--blue)}
+        .verdict-box.sys{background:#fff3e0}
+        .v-icon{font-size:3rem;animation:bIn .45s cubic-bezier(.36,.07,.19,.97)}
+        @keyframes bIn{0%{transform:scale(0) rotate(-15deg)}60%{transform:scale(1.15) rotate(4deg)}100%{transform:scale(1) rotate(0)}}
+        .v-text{font-family:var(--fd);font-size:2.2rem;letter-spacing:2px}
+        .v-sub{font-family:var(--fm);font-size:.7rem;color:#666;letter-spacing:.8px}
+        .v-bar{position:absolute;bottom:0;left:0;height:3px;transition:width 1s ease,background .3s}
 
-        /* ─── CONTAINERS SECTION ─── */
-        #containers-section { background: var(--white); }
-        .containers-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-          gap: 1rem;
-        }
-        .container-card {
-          border: var(--border);
-          padding: 1.2rem;
-          background: var(--natural-light);
-          box-shadow: var(--shadow);
-          position: relative;
-          transition: transform 0.15s, box-shadow 0.15s;
-        }
-        .container-card:hover { transform: translate(-3px,-3px); box-shadow: var(--shadow-lg); }
-        .container-status-dot {
-          width: 10px; height: 10px;
-          border-radius: 50%;
-          display: inline-block;
-          margin-right: 6px;
-        }
-        .container-status-dot.RUNNING  { background: #00cc66; animation: pulse 1.5s infinite; }
-        .container-status-dot.PAUSED   { background: var(--sunny); }
-        .container-status-dot.EXITED   { background: var(--ruby); }
-        .container-status-dot.CREATED  { background: var(--natural-dark); }
-        .container-status-dot.DEAD     { background: #333; }
-        .container-id {
-          font-family: var(--font-mono);
-          font-size: 0.7rem;
-          color: #777;
-          word-break: break-all;
-          margin-top: 0.4rem;
-        }
-        .container-host {
-          font-family: var(--font-mono);
-          font-size: 0.85rem;
-          color: var(--ruby);
-          font-weight: 700;
-          margin-top: 0.5rem;
-        }
-        .container-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
+        /* ── LEADERBOARD ── */
+        .lb-table{width:100%;border-collapse:collapse;font-family:var(--fm);font-size:.78rem}
+        .lb-table thead tr{background:var(--royal)}
+        .lb-table th{padding:10px 13px;text-align:left;font-size:.62rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--blue);border-right:1px solid rgba(255,255,255,.1)}
+        .lb-table tbody tr{border-bottom:2px solid var(--bone-d);transition:background .2s}
+        .lb-table tbody tr:hover{background:var(--blue)}
+        .lb-table td{padding:12px 13px;border-right:1.5px solid var(--bone-d);color:var(--royal)}
+        .vbadge{display:inline-block;font-size:.6rem;letter-spacing:1.5px;text-transform:uppercase;padding:2px 7px;border:1.5px solid;font-weight:700;font-family:var(--fm)}
+        .vbadge.ac{color:var(--grn);border-color:var(--grn)}
+        .vbadge.wa{color:var(--acc);border-color:var(--acc)}
+        .vbadge.tl{color:#b07d00;border-color:#b07d00}
+        .vbadge.ce,.vbadge.re{color:#888;border-color:#888}
+        .vbadge.sec{color:var(--acc);border-color:var(--acc)}
+        .lb-filters{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem}
+        .lf-btn{font-family:var(--fm);font-size:.66rem;letter-spacing:1.5px;text-transform:uppercase;padding:5px 13px;border:var(--brd);background:transparent;color:var(--royal);cursor:pointer;transition:all .2s}
+        .lf-btn:hover,.lf-btn.on{background:var(--royal);color:var(--blue)}
 
-        /* ─── PARALLAX STRIP ─── */
-        .parallax-strip {
-          height: 300px;
-          background: var(--ruby);
-          border-top: var(--border);
-          border-bottom: var(--border);
-          display: flex;
-          align-items: center;
-          overflow: hidden;
-          position: relative;
-        }
-        .parallax-text {
-          font-family: var(--font-display);
-          font-size: 10rem;
-          color: transparent;
-          -webkit-text-stroke: 2px rgba(255,255,255,0.3);
-          white-space: nowrap;
-          will-change: transform;
-          display: flex;
-          gap: 4rem;
-        }
-        .parallax-text span { color: var(--sunny); -webkit-text-stroke: 0; }
+        /* ── STATUS CARDS ── */
+        .st-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:.9rem}
+        .st-card{border:var(--brd);padding:1rem;background:var(--wht);box-shadow:var(--sh);transform:translateY(14px);opacity:0;transition:transform .3s ease,opacity .3s ease,box-shadow .15s}
+        .st-card.show{transform:none;opacity:1}
+        .st-card:hover{box-shadow:var(--sh-lg);transform:translate(-2px,-2px)}
+        .st-lbl{font-family:var(--fm);font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:#888;margin-bottom:3px}
+        .st-val{font-family:var(--fd);font-size:1.65rem;line-height:1;color:var(--royal);word-break:break-all}
 
-        /* ─── SCROLL REVEAL ─── */
-        .reveal {
-          opacity: 0;
-          transform: translateY(40px);
-          transition: opacity 0.6s ease, transform 0.6s ease;
-        }
-        .reveal.visible { opacity: 1; transform: translateY(0); }
+        /* ── STAT GRID ── */
+        .stat-g{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+        .stat-card{border:2px solid var(--royal);padding:.9rem;background:var(--bone)}
+        .stat-lbl{font-family:var(--fm);font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:#888;margin-bottom:3px}
+        .stat-val{font-family:var(--fd);font-size:1.7rem;color:var(--royal)}
 
-        /* ─── TOAST ─── */
-        .toast-container {
-          position: fixed;
-          bottom: 2rem;
-          right: 2rem;
-          z-index: 5000;
-          display: flex;
-          flex-direction: column;
-          gap: 0.8rem;
-        }
-        .toast {
-          font-family: var(--font-mono);
-          font-size: 0.8rem;
-          padding: 12px 20px;
-          border: var(--border);
-          box-shadow: var(--shadow);
-          background: var(--white);
-          color: var(--black);
-          min-width: 280px;
-          max-width: 380px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          animation: toastIn 0.3s cubic-bezier(0.36,0.07,0.19,0.97) forwards;
-        }
-        .toast.success { background: var(--sunny); }
-        .toast.error   { background: var(--ruby); color: var(--white); }
-        .toast.info    { background: var(--black); color: var(--sunny); }
-        @keyframes toastIn {
-          from { transform: translateX(120%) rotate(3deg); opacity: 0; }
-          to   { transform: translateX(0) rotate(0deg); opacity: 1; }
-        }
-        @keyframes toastOut {
-          to { transform: translateX(120%) rotate(3deg); opacity: 0; }
-        }
-        .toast.removing { animation: toastOut 0.3s ease forwards; }
+        /* ── STATUS LOOKUP ── */
+        .lookup-row{display:flex;gap:0;max-width:440px;margin-bottom:1.5rem}
+        .lookup-row input{flex:1;border:var(--brd);border-right:none;background:var(--bone);font-family:var(--fm);font-size:.88rem;padding:11px 14px;outline:none;color:var(--royal)}
+        .lookup-row input:focus{background:var(--blue)}
 
-        /* ─── PROGRESS BAR ─── */
-        #progress-bar {
-          position: fixed;
-          top: 64px;
-          left: 0;
-          height: 4px;
-          background: var(--ruby);
-          z-index: 200;
-          transition: width 0.1s;
-          border-right: 2px solid var(--sunny);
-        }
+        /* ── SECTION HEADER ── */
+        .sec-hdr{margin-bottom:1.5rem;padding-bottom:.8rem;border-bottom:var(--brd)}
+        .sec-hdr-inner{display:flex;align-items:baseline;gap:1rem}
+        .sec-num{font-family:var(--fd);font-size:3rem;color:var(--acc);line-height:1}
+        .sec-title{font-family:var(--fd);font-size:2.6rem}
+        .sec-tag{font-family:var(--fm);font-size:.62rem;letter-spacing:1.5px;text-transform:uppercase;background:var(--royal);color:var(--blue);padding:3px 9px;border:1.5px solid var(--royal);margin-left:auto}
 
-        /* ─── MODAL ─── */
-        .modal-backdrop {
-          display: none;
-          position: fixed;
-          inset: 0;
-          background: rgba(13,13,13,0.85);
-          z-index: 1000;
-          align-items: center;
-          justify-content: center;
-          backdrop-filter: blur(2px);
-        }
-        .modal-backdrop.open { display: flex; }
-        .modal {
-          background: var(--white);
-          border: var(--border);
-          box-shadow: var(--shadow-lg);
-          padding: 0;
-          max-width: 560px;
-          width: 90%;
-          animation: modalIn 0.3s cubic-bezier(0.36,0.07,0.19,0.97);
-          max-height: 90vh;
-          overflow-y: auto;
-        }
-        @keyframes modalIn {
-          from { transform: scale(0.8) rotate(-2deg); opacity: 0; }
-          to   { transform: scale(1) rotate(0deg); opacity: 1; }
-        }
-        .modal-header {
-          background: var(--black);
-          color: var(--sunny);
-          font-family: var(--font-display);
-          font-size: 1.8rem;
-          letter-spacing: 2px;
-          padding: 1rem 1.5rem;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-        .modal-close {
-          font-size: 1.5rem;
-          cursor: pointer;
-          background: none;
-          border: none;
-          color: var(--ruby);
-          font-weight: bold;
-          transition: transform 0.2s;
-        }
-        .modal-close:hover { transform: rotate(90deg); }
-        .modal-body { padding: 1.5rem; }
+        /* ── COLLAPSIBLE ── */
+        .coll-hdr{display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:var(--fm);font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;padding:.5rem 0;border-bottom:2px solid var(--bone-d);user-select:none;color:var(--royal)}
+        .coll-hdr::after{content:'▼';font-size:.6rem;transition:transform .2s}
+        .coll-hdr.open::after{transform:rotate(180deg)}
+        .coll-body{max-height:0;overflow:hidden;transition:max-height .35s ease}
+        .coll-body.open{max-height:900px}
 
-        /* ─── STICKY SIDEBAR ─── */
-        .sticky-sidebar {
-          position: sticky;
-          top: 80px;
-          align-self: start;
-        }
+        /* ── SECURITY NOTICE ── */
+        .sec-notice{font-family:var(--fm);font-size:.68rem;background:var(--royal);color:#88ccff;padding:.6rem 1rem;border:2px solid #88ccff;margin-bottom:.9rem;line-height:1.65}
 
-        /* ─── MISC ─── */
-        .divider {
-          height: 3px;
-          background: var(--black);
-          margin: 0;
-        }
-        .tag {
-          font-family: var(--font-mono);
-          font-size: 0.65rem;
-          letter-spacing: 1.5px;
-          text-transform: uppercase;
-          padding: 3px 8px;
-          border: 1.5px solid var(--black);
-          display: inline-block;
-        }
-        .kbd {
-          font-family: var(--font-mono);
-          font-size: 0.65rem;
-          background: var(--black);
-          color: var(--sunny);
-          padding: 2px 6px;
-          border-radius: 2px;
-        }
-        .empty-state {
-          text-align: center;
-          padding: 3rem;
-          border: 2px dashed var(--natural-dark);
-          color: #888;
-          font-family: var(--font-mono);
-          font-size: 0.85rem;
-        }
+        /* ── TOAST ── */
+        .toast-wrap{position:fixed;bottom:1.8rem;right:1.8rem;z-index:8000;display:flex;flex-direction:column;gap:.6rem}
+        .toast{font-family:var(--fm);font-size:.76rem;padding:10px 16px;border:var(--brd);box-shadow:var(--sh);background:var(--wht);color:var(--royal);min-width:260px;max-width:340px;display:flex;align-items:center;gap:8px;animation:tIn .28s cubic-bezier(.36,.07,.19,.97) forwards;border-radius:var(--r)}
+        .toast.ok{background:var(--blue);color:var(--royal)}
+        .toast.err{background:var(--acc);color:var(--wht)}
+        .toast.info{background:var(--royal);color:var(--blue)}
+        @keyframes tIn{from{transform:translateX(110%) rotate(2deg);opacity:0}to{transform:none;opacity:1}}
+        @keyframes tOut{to{transform:translateX(110%) rotate(2deg);opacity:0}}
+        .toast.out{animation:tOut .28s ease forwards}
 
-        /* Loading skeleton */
-        .skeleton {
-          background: linear-gradient(90deg, var(--natural) 25%, var(--natural-light) 50%, var(--natural) 75%);
-          background-size: 200% 100%;
-          animation: shimmer 1.2s infinite;
-          border: var(--border);
-          height: 120px;
-        }
-        @keyframes shimmer {
-          0%   { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
+        /* ── MODAL ── */
+        .modal-bg{display:none;position:fixed;inset:0;background:rgba(22,38,96,.82);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+        .modal-bg.open{display:flex}
+        .modal{background:var(--wht);border:var(--brd);box-shadow:var(--sh-lg);max-width:560px;width:92%;max-height:90vh;overflow-y:auto;border-radius:var(--r);animation:mIn .28s cubic-bezier(.36,.07,.19,.97)}
+        @keyframes mIn{from{transform:scale(.85) rotate(-1.5deg);opacity:0}to{transform:none;opacity:1}}
+
+        /* ── PARALLAX STRIP ── */
+        .par-strip{height:240px;background:var(--blue);border-top:var(--brd);border-bottom:var(--brd);display:flex;align-items:center;overflow:hidden;position:relative}
+        .par-txt{font-family:var(--fd);font-size:8rem;color:var(--royal);opacity:.18;white-space:nowrap;will-change:transform;display:flex;gap:3rem;letter-spacing:3px}
+        .par-txt-accent{font-family:var(--fd);font-size:5rem;color:var(--royal);white-space:nowrap;will-change:transform;display:flex;gap:2rem;position:absolute;letter-spacing:2px}
+        .par-txt-accent span{color:var(--acc)}
+
+        /* ── STICKY SIDEBAR ── */
+        .sticky-side{position:sticky;top:60px;align-self:start}
+
+        /* ── EMPTY / SKEL ── */
+        .empty{text-align:center;padding:2.5rem;border:2px dashed var(--bone-dd);color:#aaa;font-family:var(--fm);font-size:.8rem;grid-column:1/-1}
+        .skel{border:var(--brd);height:130px;background:linear-gradient(90deg,var(--bone-d) 25%,var(--bone) 50%,var(--bone-d) 75%);background-size:200% 100%;animation:shimmer 1.1s infinite}
+        @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+        /* ── RETRO DECORATION ── */
+        .retro-label{font-family:var(--fm);font-size:.62rem;letter-spacing:3px;text-transform:uppercase;opacity:.4;border:1.5px solid currentColor;padding:2px 7px;display:inline-block}
+
+        /* canvas */
+        #cvs{position:fixed;inset:0;pointer-events:none;z-index:7999}
     </style>
 </head>
 <body>
 
-<!-- Custom cursor -->
-<div class="cursor-dot" id="cursorDot"></div>
-<div class="cursor-ring" id="cursorRing"></div>
+<canvas id="cvs"></canvas>
+<div class="cur cur-d" id="cd"></div>
+<div class="cur-r" id="cr"></div>
+<div id="prog" style="width:0%"></div>
+<div class="toast-wrap" id="toasts"></div>
 
-<!-- Scroll progress bar -->
-<div id="progress-bar" style="width:0%"></div>
-
-<!-- Toast container -->
-<div class="toast-container" id="toastContainer"></div>
-
-<!-- ─── NAV ─── -->
-<nav>
-    <div class="nav-logo">SQL<span>ZILLA</span></div>
-    <div class="nav-links">
-        <a class="nav-link active" href="#tasks-section">Задачи</a>
-        <a class="nav-link" href="#submit-section">Решение</a>
-        <a class="nav-link" href="#leaderboard-section">Рейтинг</a>
-        <a class="nav-link" href="#status-section">Статус</a>
-        <a class="nav-link" href="#admin-section">Админ</a>
-        <a class="nav-link" href="#containers-section">Контейнеры</a>
-    </div>
-</nav>
-
-<!-- ─── HERO ─── -->
-<section class="hero" id="hero">
-    <div class="hero-bg-grid"></div>
-    <div class="hero-content">
-        <div class="hero-eyebrow">// Competitive SQL Judge System v1.0</div>
-        <h1 class="hero-title">
-            <div>SQL</div>
-            <div class="accent">ZILLA</div>
-            <div class="outline">JUDGE</div>
+<!-- ══════════════════ HERO ══════════════════ -->
+<section class="hero">
+    <div class="hero-scanlines"></div>
+    <div class="hero-dots"></div>
+    <div style="position:relative;z-index:2">
+        <div class="retro-label" style="color:var(--blue);margin-bottom:1.2rem;animation:fadeUp .6s ease forwards .2s;opacity:0">
+            // SQL JUDGE SYSTEM · H2 · MINIO · KAFKA · 2026
+        </div>
+        <h1 class="hero-title" style="opacity:0;animation:fadeUp .9s ease forwards .3s">
+            <div>SQL</div><div class="t-blue">ZILLA</div><div class="t-out">JUDGE</div>
         </h1>
-        <p class="hero-sub">
-            Отправляй SQL-решения, соревнуйся с другими, получай вердикт мгновенно.
-            Kafka гарантирует честный порядок.
-        </p>
-        <div class="hero-buttons">
-            <a class="btn btn-primary" href="#submit-section">Отправить решение ↓</a>
-            <a class="btn btn-secondary" href="#tasks-section">Смотреть задачи</a>
+        <p class="hero-sub">Каждая посылка — изолированная H2 БД. Скрипты хранятся в MinIO. Kafka гарантирует честный порядок. Никаких зависших PENDING.</p>
+        <div class="hero-badges">
+            <span class="hero-badge-item">H2 Isolation</span>
+            <span class="hero-badge-item">MinIO Scripts</span>
+            <span class="hero-badge-item">Kafka Queue</span>
+            <span class="hero-badge-item">SQL Security</span>
         </div>
     </div>
-    <div class="hero-floating-badge">
-        <div class="badge-circle">
-            <div class="badge-num" id="heroTaskCount">—</div>
-            <div class="badge-label">активных<br>задач</div>
+    <div class="hero-stat" style="opacity:0;animation:fadeUp 1s ease forwards 1s">
+        <div class="hero-stat-box">
+            <div class="hero-stat-num" id="heroCount">—</div>
+            <div class="hero-stat-lbl">активных<br>задач</div>
         </div>
     </div>
-    <div class="hero-ticker">
-        <div class="hero-ticker-inner" id="tickerInner">
-            <span class="hero-ticker-item">SELECT * FROM победа</span>
-            <span class="hero-ticker-item">ACCEPTED</span>
-            <span class="hero-ticker-item">WRONG ANSWER</span>
-            <span class="hero-ticker-item">Kafka offset = порядок</span>
-            <span class="hero-ticker-item">JOIN ALL THE THINGS</span>
-            <span class="hero-ticker-item">GROUP BY skill</span>
-            <span class="hero-ticker-item">HAVING fun = true</span>
-            <span class="hero-ticker-item">SELECT * FROM победа</span>
-            <span class="hero-ticker-item">ACCEPTED</span>
-            <span class="hero-ticker-item">WRONG ANSWER</span>
-            <span class="hero-ticker-item">Kafka offset = порядок</span>
-            <span class="hero-ticker-item">JOIN ALL THE THINGS</span>
-            <span class="hero-ticker-item">GROUP BY skill</span>
-            <span class="hero-ticker-item">HAVING fun = true</span>
+    <div class="ticker">
+        <div class="ticker-inner">
+            <span class="ticker-item">SELECT * FROM победа</span>
+            <span class="ticker-item">ACCEPTED</span>
+            <span class="ticker-item">H2 Isolation</span>
+            <span class="ticker-item">Kafka Offset</span>
+            <span class="ticker-item">MinIO Scripts</span>
+            <span class="ticker-item">GROUP BY skill HAVING fun = true</span>
+            <span class="ticker-item">SELECT * FROM победа</span>
+            <span class="ticker-item">ACCEPTED</span>
+            <span class="ticker-item">H2 Isolation</span>
+            <span class="ticker-item">Kafka Offset</span>
+            <span class="ticker-item">MinIO Scripts</span>
+            <span class="ticker-item">GROUP BY skill HAVING fun = true</span>
         </div>
     </div>
 </section>
 
-<!-- ─── TASKS SECTION ─── -->
-<section id="tasks-section">
-    <div class="section-header reveal">
-        <div class="section-num">01</div>
-        <h2 class="section-title">ЗАДАЧИ</h2>
-        <span class="section-tag">GET /sqlservice/tasks</span>
-    </div>
-    <div style="display:flex; gap:0.8rem; margin-bottom:1.5rem; flex-wrap:wrap;" class="reveal">
-        <select class="form-select" id="taskTypeFilter" style="width:auto; min-width:160px;"
-                onchange="filterTasks()">
-            <option value="">Все типы</option>
-            <option value="DQL">DQL — Выборка</option>
-            <option value="DML">DML — Изменение</option>
-            <option value="DDL">DDL — Структура</option>
-            <option value="DCL">DCL — Доступ</option>
-            <option value="TCL">TCL — Транзакции</option>
-        </select>
-        <select class="form-select" id="taskDbFilter" style="width:auto; min-width:200px;"
-                onchange="filterTasks()">
-            <option value="">Все базы данных</option>
-        </select>
-        <button class="btn btn-ghost btn-sm" onclick="loadTasks()">↺ Обновить</button>
-    </div>
-    <div class="tasks-grid" id="tasksGrid">
-        <div class="skeleton"></div>
-        <div class="skeleton"></div>
-        <div class="skeleton"></div>
-    </div>
-</section>
-
-<!-- ─── PARALLAX STRIP ─── -->
-<div class="parallax-strip">
-    <div class="parallax-text" id="parallaxText">
-        <span>SELECT</span> * FROM &nbsp;<span>GREATNESS</span>&nbsp; WHERE skill &gt; 0 &nbsp;
-        <span>ORDER</span> BY kafka_offset &nbsp;<span>ASC</span> &nbsp;—&nbsp;
-        <span>SELECT</span> * FROM &nbsp;<span>GREATNESS</span>&nbsp; WHERE skill &gt; 0
-    </div>
+<!-- ══════════════════ TABS ══════════════════ -->
+<div class="tabs-nav" id="tabsNav">
+    <div class="tab-logo" onclick="scrollToTop()">SQL<span>Z</span></div>
+    <button class="tab-btn active" onclick="switchTab('tasks',this)">01 · Задачи</button>
+    <button class="tab-btn" onclick="switchTab('submit',this)">02 · Решение</button>
+    <button class="tab-btn" onclick="switchTab('lb',this)">03 · Рейтинг</button>
+    <button class="tab-btn" onclick="switchTab('status',this)">04 · Статус</button>
+    <button class="tab-btn" onclick="switchTab('admin',this)">05 · Управление</button>
 </div>
 
-<!-- ─── SUBMIT SECTION ─── -->
-<section id="submit-section">
-    <div class="section-header reveal">
-        <div class="section-num">02</div>
-        <h2 class="section-title">РЕШЕНИЕ</h2>
-        <span class="section-tag">POST /sqlservice/submissions</span>
-    </div>
-    <div class="submit-layout">
-        <div>
-            <div class="panel reveal">
-                <div class="panel-header">
-                    <span><span class="dot"></span>РЕДАКТОР SQL</span>
-                    <span style="font-size:0.75rem; color: var(--natural); font-family: var(--font-mono);">
-            <span class="kbd">Ctrl+Enter</span> отправить
-          </span>
+<!-- ══════════════════ APP ══════════════════ -->
+<div class="app-shell">
+
+    <!-- ── TAB: TASKS ── -->
+    <div class="tab-panel active" id="tab-tasks">
+        <div class="mac-win reveal">
+            <div class="mac-titlebar blue">
+                <div class="mac-btn-wrap">
+                    <div class="mac-btn red" title="Закрыть"></div>
+                    <div class="mac-btn yel" title="Свернуть"></div>
+                    <div class="mac-btn grn" title="Развернуть"></div>
                 </div>
-                <div class="panel-body">
-                    <div class="form-group">
-                        <label class="form-label">Задача</label>
-                        <select class="form-select" id="submitTaskId">
-                            <option value="">— Выбрать задачу —</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">User ID (UUID)</label>
-                        <input class="form-input" type="text" id="submitUserId"
-                               placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                               value="">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">SQL-запрос</label>
-                        <textarea class="form-textarea" id="submitSql"
-                                  placeholder="-- Введи свой SQL запрос здесь&#10;SELECT *&#10;FROM table_name&#10;WHERE condition;"></textarea>
-                    </div>
-                    <button class="btn btn-primary" id="submitBtn" onclick="submitSolution()" style="width:100%">
-                        Отправить решение →
-                    </button>
-                </div>
+                <div class="mac-win-title">tasks.db — GET /sqlservice/tasks</div>
             </div>
-        </div>
-
-        <div class="sticky-sidebar">
-            <div class="panel reveal" style="margin-bottom:1.5rem;">
-                <div class="panel-header">ВЕРДИКТ</div>
-                <div class="panel-body" style="padding:0;">
-                    <div class="verdict-display" id="verdictDisplay">
-                        <div style="font-family:var(--font-mono); font-size:0.8rem; color:#888; text-align:center; padding:2rem;">
-                            Отправь решение<br>и получи вердикт
-                        </div>
+            <div class="mac-content">
+                <div class="sec-hdr">
+                    <div class="sec-hdr-inner">
+                        <div class="sec-num">01</div>
+                        <h2 class="sec-title">ЗАДАЧИ</h2>
+                        <span class="sec-tag">GET /tasks</span>
                     </div>
                 </div>
-            </div>
-
-            <div class="panel reveal">
-                <div class="panel-header">СТАТИСТИКА ПОСЫЛОК</div>
-                <div class="panel-body" style="padding:0.8rem;">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;" id="submissionStats">
-                        <div class="status-card show" style="border:2px solid var(--black); box-shadow:none;">
-                            <div class="status-card-label">Всего</div>
-                            <div class="status-card-value" id="statTotal">—</div>
-                        </div>
-                        <div class="status-card show" style="border:2px solid var(--black); box-shadow:none;">
-                            <div class="status-card-label">Accepted</div>
-                            <div class="status-card-value" style="color:#00cc66;" id="statAc">—</div>
-                        </div>
-                        <div class="status-card show" style="border:2px solid var(--black); box-shadow:none;">
-                            <div class="status-card-label">Wrong</div>
-                            <div class="status-card-value" style="color:var(--ruby);" id="statWa">—</div>
-                        </div>
-                        <div class="status-card show" style="border:2px solid var(--black); box-shadow:none;">
-                            <div class="status-card-label">Pending</div>
-                            <div class="status-card-value" style="color:var(--sunny);" id="statPend">—</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ─── LEADERBOARD ─── -->
-<section id="leaderboard-section">
-    <div class="section-header reveal">
-        <div class="section-num">03</div>
-        <h2 class="section-title">РЕЙТИНГ</h2>
-        <span class="section-tag" style="border-color:var(--sunny); color:var(--black); background:var(--sunny);">
-      GET /submissions/leaderboard
-    </span>
-    </div>
-    <div style="display:flex; gap:1rem; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap;" class="reveal">
-        <select class="form-select" id="lbTaskId" style="width:auto; min-width:200px; background:var(--black); color:var(--natural);">
-            <option value="">— Выбрать задачу —</option>
-        </select>
-        <button class="btn btn-primary btn-sm" onclick="loadLeaderboard()">Загрузить →</button>
-    </div>
-    <div class="leaderboard-filter reveal" id="lbFilters">
-        <button class="filter-btn active" onclick="filterLeaderboard('ALL', this)">Все</button>
-        <button class="filter-btn" onclick="filterLeaderboard('ACCEPTED', this)">✓ Accepted</button>
-        <button class="filter-btn" onclick="filterLeaderboard('WRONG_ANSWER', this)">✗ Wrong</button>
-        <button class="filter-btn" onclick="filterLeaderboard('TIME_LIMIT_EXCEEDED', this)">⏱ TLE</button>
-        <button class="filter-btn" onclick="filterLeaderboard('COMPILATION_ERROR', this)">⚡ CE</button>
-    </div>
-    <div class="reveal" style="overflow-x:auto;">
-        <table class="leaderboard-table">
-            <thead>
-            <tr>
-                <th>#</th>
-                <th>User ID</th>
-                <th>Задача</th>
-                <th>Вердикт</th>
-                <th>Время (мс)</th>
-                <th>Kafka Offset</th>
-                <th>Дата</th>
-            </tr>
-            </thead>
-            <tbody id="leaderboardBody">
-            <tr><td colspan="7" style="text-align:center; padding:3rem; color:#555;">
-                Выбери задачу и нажми «Загрузить»
-            </td></tr>
-            </tbody>
-        </table>
-    </div>
-</section>
-
-<!-- ─── STATUS LOOKUP ─── -->
-<section id="status-section">
-    <div class="section-header reveal">
-        <div class="section-num">04</div>
-        <h2 class="section-title">СТАТУС</h2>
-        <span class="section-tag">GET /submissions/{id}</span>
-    </div>
-    <div class="status-lookup reveal">
-        <input type="number" id="statusLookupId" placeholder="Введи Submission ID..."
-               onkeydown="if(event.key==='Enter') lookupStatus()">
-        <button class="btn btn-ruby" onclick="lookupStatus()">Найти →</button>
-    </div>
-    <div class="status-cards" id="statusCards"></div>
-</section>
-
-<!-- ─── ADMIN ─── -->
-<section id="admin-section">
-    <div class="section-header reveal">
-        <div class="section-num">05</div>
-        <h2 class="section-title">УПРАВЛЕНИЕ</h2>
-        <span class="section-tag">ADMIN PANEL</span>
-    </div>
-    <div class="admin-grid">
-        <!-- Create Task -->
-        <div class="panel reveal">
-            <div class="panel-header">
-                <span>+ НОВАЯ ЗАДАЧА</span>
-                <span style="font-size:0.7rem; font-family:var(--font-mono); color:var(--natural);">
-          POST /tasks
-        </span>
-            </div>
-            <div class="panel-body">
-                <div class="form-group">
-                    <label class="form-label">База данных</label>
-                    <select class="form-select" id="newTaskDbId">
-                        <option value="">— Выбрать БД —</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Название задачи</label>
-                    <input class="form-input" type="text" id="newTaskTitle" placeholder="Сложный JOIN...">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Тип</label>
-                    <select class="form-select" id="newTaskType">
+                <div style="display:flex;gap:.7rem;margin-bottom:1.2rem;flex-wrap:wrap">
+                    <select class="fs" id="filterType" style="width:auto;min-width:140px" onchange="filterTasks()">
+                        <option value="">Все типы</option>
                         <option value="DQL">DQL — Выборка</option>
                         <option value="DML">DML — Изменение</option>
                         <option value="DDL">DDL — Структура</option>
-                        <option value="DCL">DCL — Доступ</option>
-                        <option value="TCL">TCL — Транзакции</option>
                     </select>
+                    <button class="btn btn-ghost btn-sm" onclick="loadTasks()">↺ Обновить</button>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Описание задачи</label>
-                    <textarea class="form-textarea" id="newTaskDesc" style="min-height:80px;"
-                              placeholder="Условие задачи..."></textarea>
+                <div class="grid-auto" id="tasksGrid">
+                    <div class="skel"></div><div class="skel"></div><div class="skel"></div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Правильный SQL</label>
-                    <textarea class="form-textarea" id="newTaskSql" style="min-height:100px;"
-                              placeholder="SELECT ..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Лимит времени (мс)</label>
-                    <input class="form-input" type="number" id="newTaskTl" value="30000" min="1000">
-                </div>
-                <button class="btn btn-primary" onclick="createTask()" style="width:100%">
-                    Создать задачу →
-                </button>
             </div>
         </div>
+    </div>
 
-        <!-- Manage Tasks -->
-        <div>
-            <!-- Register DB -->
-            <div class="panel reveal" style="margin-bottom:1.5rem;">
-                <div class="panel-header">
-                    <span>+ НОВАЯ БД</span>
-                    <span style="font-size:0.7rem; font-family:var(--font-mono); color:var(--natural);">
-            POST /databases
-          </span>
-                </div>
-                <div class="panel-body">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem;">
-                        <div class="form-group">
-                            <label class="form-label">Имя</label>
-                            <input class="form-input" type="text" id="newDbName" placeholder="ecommerce_db">
+    <!-- ── TAB: SUBMIT ── -->
+    <div class="tab-panel" id="tab-submit">
+        <div class="grid-2" style="align-items:start">
+            <div>
+                <div class="mac-win reveal">
+                    <div class="mac-titlebar dark">
+                        <div class="mac-btn-wrap">
+                            <div class="mac-btn red"></div>
+                            <div class="mac-btn yel"></div>
+                            <div class="mac-btn grn"></div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Схема</label>
-                            <input class="form-input" type="text" id="newDbSchema" placeholder="public">
+                        <div class="mac-win-title" style="color:var(--blue);opacity:.5">sql-editor.sh</div>
+                    </div>
+                    <div class="mac-content" style="background:var(--royal)">
+                        <div class="sec-hdr" style="border-bottom-color:rgba(208,230,253,.2)">
+                            <div class="sec-hdr-inner">
+                                <div class="sec-num" style="color:var(--acc)">02</div>
+                                <h2 class="sec-title" style="color:var(--bone)">РЕШЕНИЕ</h2>
+                                <span class="sec-tag" style="background:var(--acc);border-color:var(--acc);color:var(--wht)">POST /submissions</span>
+                            </div>
                         </div>
-                    </div>
-                    <button class="btn btn-ghost" onclick="createDatabase()" style="width:100%">
-                        Создать БД →
-                    </button>
-                </div>
-            </div>
-
-            <!-- Delete / Update Task -->
-            <div class="panel reveal">
-                <div class="panel-header">
-                    <span>⚡ УПРАВЛЕНИЕ ЗАДАЧЕЙ</span>
-                    <span style="font-size:0.7rem; font-family:var(--font-mono); color:var(--natural);">
-            PATCH / DELETE
-          </span>
-                </div>
-                <div class="panel-body">
-                    <div class="form-group">
-                        <label class="form-label">ID задачи</label>
-                        <input class="form-input" type="number" id="manageTaskId" placeholder="1">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Новое название (опц.)</label>
-                        <input class="form-input" type="text" id="manageTaskTitle" placeholder="Оставь пустым если не менять">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Новый лимит мс (опц.)</label>
-                        <input class="form-input" type="number" id="manageTaskTl" placeholder="30000">
-                    </div>
-                    <div style="display:flex; gap:0.5rem;">
-                        <button class="btn btn-ghost btn-sm" onclick="updateTask()" style="flex:1">
-                            Обновить
-                        </button>
-                        <button class="btn btn-ruby btn-sm" onclick="deleteTask()" style="flex:1">
-                            Удалить ✕
+                        <div class="fg">
+                            <label class="fl" style="color:var(--blue-d)">Задача</label>
+                            <select class="fs" id="subTaskId" style="background:var(--royal-l);color:var(--bone);border-color:rgba(208,230,253,.3)">
+                                <option value="">— Выбрать задачу —</option>
+                            </select>
+                        </div>
+                        <div class="fg">
+                            <label class="fl" style="color:var(--blue-d)">User ID (UUID)</label>
+                            <input class="fi" type="text" id="subUserId" style="background:var(--royal-l);color:var(--bone);border-color:rgba(208,230,253,.3)" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                        </div>
+                        <div class="fg">
+                            <label class="fl" style="color:var(--blue-d)">SQL запрос</label>
+                            <textarea class="ft" id="subSql" placeholder="-- Введи SQL запрос&#10;SELECT * FROM table_name&#10;WHERE condition;"></textarea>
+                        </div>
+                        <div class="sec-notice">🔒 DROP·TRUNCATE·COMMIT·системные вызовы заблокированы. SQL нормализуется автоматически.</div>
+                        <button class="btn btn-blue btn-full" id="subBtn" onclick="submitSolution()" style="border-color:var(--blue)">
+                            Отправить → Kafka ↗
                         </button>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</section>
 
-<!-- ─── CONTAINERS ─── -->
-<section id="containers-section">
-    <div class="section-header reveal">
-        <div class="section-num">06</div>
-        <h2 class="section-title">КОНТЕЙНЕРЫ</h2>
-        <span class="section-tag">GET /sqlservice/containers</span>
-    </div>
-    <div style="display:flex; gap:0.8rem; margin-bottom:1.5rem; flex-wrap:wrap;" class="reveal">
-        <select class="form-select" id="containerStatusFilter" style="width:auto; min-width:160px;"
-                onchange="loadContainers()">
-            <option value="">Все статусы</option>
-            <option value="RUNNING">RUNNING</option>
-            <option value="PAUSED">PAUSED</option>
-            <option value="EXITED">EXITED</option>
-        </select>
-        <button class="btn btn-ghost btn-sm" onclick="openRegisterContainerModal()">
-            + Зарегистрировать контейнер
-        </button>
-        <button class="btn btn-ghost btn-sm" onclick="loadContainers()">↺ Обновить</button>
-    </div>
-    <div class="containers-grid reveal" id="containersGrid">
-        <div class="skeleton"></div>
-        <div class="skeleton"></div>
-    </div>
-</section>
-
-<!-- ─── MODAL: Register Container ─── -->
-<div class="modal-backdrop" id="modalRegisterContainer">
-    <div class="modal">
-        <div class="modal-header">
-            НОВЫЙ КОНТЕЙНЕР
-            <button class="modal-close" onclick="closeModal('modalRegisterContainer')">✕</button>
-        </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label class="form-label">База данных</label>
-                <select class="form-select" id="rcDbId">
-                    <option value="">— Выбрать БД —</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Container ID (Docker)</label>
-                <input class="form-input" type="text" id="rcContainerId"
-                       placeholder="a3f2b1c4d5e6...">
-            </div>
-            <div style="display:grid; grid-template-columns:2fr 1fr; gap:0.8rem;">
-                <div class="form-group">
-                    <label class="form-label">Host</label>
-                    <input class="form-input" type="text" id="rcHost" value="localhost">
+            <div class="sticky-side">
+                <div class="mac-win reveal" style="margin-bottom:1.3rem">
+                    <div class="mac-titlebar">
+                        <div class="mac-btn-wrap">
+                            <div class="mac-btn red"></div>
+                            <div class="mac-btn yel"></div>
+                            <div class="mac-btn grn"></div>
+                        </div>
+                        <div class="mac-win-title">pipeline.log</div>
+                    </div>
+                    <div class="mac-content" style="padding:1rem">
+                        <div class="pipeline" id="pipeline">
+                            <div class="ps" id="ps-v">Валидация</div>
+                            <div class="ps" id="ps-k">Kafka</div>
+                            <div class="ps" id="ps-m">MinIO</div>
+                            <div class="ps" id="ps-h">H2</div>
+                            <div class="ps" id="ps-e">Выполнение</div>
+                            <div class="ps" id="ps-j">Вердикт</div>
+                        </div>
+                        <div class="verdict-box" id="verdictBox">
+                            <div style="font-family:var(--fm);font-size:.76rem;color:#aaa;text-align:center;padding:2rem">
+                                Отправь решение<br>и смотри результат
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Port</label>
-                    <input class="form-input" type="number" id="rcPort" value="5433">
+
+                <div class="mac-win reveal">
+                    <div class="mac-titlebar">
+                        <div class="mac-btn-wrap">
+                            <div class="mac-btn red"></div>
+                            <div class="mac-btn yel"></div>
+                            <div class="mac-btn grn"></div>
+                        </div>
+                        <div class="mac-win-title">stats.json</div>
+                    </div>
+                    <div class="mac-content" style="padding:.9rem">
+                        <div class="stat-g">
+                            <div class="stat-card"><div class="stat-lbl">Всего</div><div class="stat-val" id="stTotal">—</div></div>
+                            <div class="stat-card"><div class="stat-lbl">Accepted</div><div class="stat-val" style="color:var(--grn)" id="stAc">—</div></div>
+                            <div class="stat-card"><div class="stat-lbl">Wrong</div><div class="stat-val" style="color:var(--acc)" id="stWa">—</div></div>
+                            <div class="stat-card"><div class="stat-lbl">Pending</div><div class="stat-val" style="color:#b07d00" id="stPend">—</div></div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <button class="btn btn-primary" onclick="registerContainer()" style="width:100%; margin-top:0.5rem;">
-                Зарегистрировать →
-            </button>
+        </div>
+
+        <!-- parallax strip inside submit tab -->
+        <div class="par-strip reveal" style="margin:2rem -4vw;border-radius:0">
+            <div class="par-txt" id="parBg">H2 ISOLATION · MINIO SCRIPTS · KAFKA QUEUE · ZERO PENDING · H2 ISOLATION · MINIO SCRIPTS · KAFKA QUEUE</div>
+            <div class="par-txt-accent" id="parFg">
+                <span>SELECT</span> * FROM <span>greatness</span> WHERE skill &gt; 0 ORDER BY kafka_offset <span>ASC</span>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- ─── MODAL: Task Detail ─── -->
-<div class="modal-backdrop" id="modalTaskDetail">
-    <div class="modal">
-        <div class="modal-header">
-            <span id="modalTaskTitle">ЗАДАЧА</span>
-            <button class="modal-close" onclick="closeModal('modalTaskDetail')">✕</button>
+    <!-- ── TAB: LEADERBOARD ── -->
+    <div class="tab-panel" id="tab-lb">
+        <div class="mac-win reveal" style="background:var(--royal)">
+            <div class="mac-titlebar dark">
+                <div class="mac-btn-wrap">
+                    <div class="mac-btn red"></div>
+                    <div class="mac-btn yel"></div>
+                    <div class="mac-btn grn"></div>
+                </div>
+                <div class="mac-win-title">leaderboard.db</div>
+            </div>
+            <div class="mac-content">
+                <div class="sec-hdr" style="border-bottom-color:rgba(208,230,253,.2)">
+                    <div class="sec-hdr-inner">
+                        <div class="sec-num" style="color:var(--acc)">03</div>
+                        <h2 class="sec-title" style="color:var(--blue)">РЕЙТИНГ</h2>
+                        <span class="sec-tag" style="background:var(--blue);color:var(--royal);border-color:var(--blue)">GET /leaderboard</span>
+                    </div>
+                </div>
+                <div style="display:flex;gap:.8rem;align-items:center;margin-bottom:1.2rem;flex-wrap:wrap">
+                    <select class="fs" id="lbTask" style="width:auto;min-width:200px;background:var(--royal-l);color:var(--bone);border-color:rgba(208,230,253,.3)">
+                        <option value="">— Выбрать задачу —</option>
+                    </select>
+                    <button class="btn btn-blue btn-sm" onclick="loadLb()">Загрузить →</button>
+                </div>
+                <div class="lb-filters">
+                    <button class="lf-btn on" style="border-color:var(--blue);color:var(--blue)" onclick="filterLb('ALL',this)">Все</button>
+                    <button class="lf-btn" style="color:var(--blue)" onclick="filterLb('ACCEPTED',this)">✓ AC</button>
+                    <button class="lf-btn" style="color:var(--blue)" onclick="filterLb('WRONG_ANSWER',this)">✗ WA</button>
+                    <button class="lf-btn" style="color:var(--blue)" onclick="filterLb('TIME_LIMIT_EXCEEDED',this)">⏱ TLE</button>
+                    <button class="lf-btn" style="color:var(--blue)" onclick="filterLb('COMPILATION_ERROR',this)">⚡ CE</button>
+                    <button class="lf-btn" style="color:var(--blue)" onclick="filterLb('SECURITY_VIOLATION',this)">🔒 SEC</button>
+                </div>
+                <div style="overflow-x:auto;border:var(--brd);border-color:rgba(208,230,253,.2)">
+                    <table class="lb-table">
+                        <thead><tr>
+                            <th>#</th><th>User</th><th>Задача</th><th>Вердикт</th>
+                            <th>Время мс</th><th>Offset</th><th>Дата</th>
+                        </tr></thead>
+                        <tbody id="lbBody">
+                        <tr><td colspan="7" style="text-align:center;padding:2.5rem;color:#88aacc">Выбери задачу и загрузи рейтинг</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        <div class="modal-body" id="modalTaskBody"></div>
+    </div>
+
+    <!-- ── TAB: STATUS ── -->
+    <div class="tab-panel" id="tab-status">
+        <div class="mac-win reveal">
+            <div class="mac-titlebar blue">
+                <div class="mac-btn-wrap">
+                    <div class="mac-btn red"></div>
+                    <div class="mac-btn yel"></div>
+                    <div class="mac-btn grn"></div>
+                </div>
+                <div class="mac-win-title">status-lookup.sh — GET /sqlservice/submissions/{id}</div>
+            </div>
+            <div class="mac-content">
+                <div class="sec-hdr">
+                    <div class="sec-hdr-inner">
+                        <div class="sec-num">04</div>
+                        <h2 class="sec-title">СТАТУС</h2>
+                        <span class="sec-tag">GET /submissions/{id}</span>
+                    </div>
+                </div>
+                <div class="lookup-row">
+                    <input type="number" id="stLookId" placeholder="Введи Submission ID..." onkeydown="if(event.key==='Enter')lookupStatus()">
+                    <button class="btn btn-royal" onclick="lookupStatus()">Найти →</button>
+                </div>
+                <div class="st-cards" id="stCards"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── TAB: ADMIN ── -->
+    <div class="tab-panel" id="tab-admin">
+        <div class="grid-2">
+
+            <!-- CREATE TASK -->
+            <div class="mac-win reveal">
+                <div class="mac-titlebar">
+                    <div class="mac-btn-wrap">
+                        <div class="mac-btn red"></div>
+                        <div class="mac-btn yel"></div>
+                        <div class="mac-btn grn"></div>
+                    </div>
+                    <div class="mac-win-title">new-task.sh — POST /sqlservice/tasks</div>
+                </div>
+                <div class="mac-content">
+                    <div class="sec-hdr">
+                        <div class="sec-hdr-inner">
+                            <div class="sec-num">05</div>
+                            <h2 class="sec-title">НОВАЯ ЗАДАЧА</h2>
+                        </div>
+                    </div>
+                    <div class="fg">
+                        <label class="fl">База данных</label>
+                        <select class="fs" id="newDbId"><option value="">— Выбрать БД —</option></select>
+                    </div>
+                    <div class="fg">
+                        <label class="fl">Название задачи</label>
+                        <input class="fi" type="text" id="newTitle" placeholder="Курьеры с рейтингом > 4.5">
+                    </div>
+                    <div class="fg">
+                        <label class="fl">Тип задачи</label>
+                        <select class="fs" id="newType">
+                            <option value="DQL">DQL — Выборка данных</option>
+                            <option value="DML">DML — Изменение данных</option>
+                        </select>
+                    </div>
+                    <div class="fg">
+                        <label class="fl">Описание</label>
+                        <textarea class="ft" id="newDesc" style="min-height:80px" placeholder="Условие задачи для пользователя..."></textarea>
+                    </div>
+                    <div class="fg">
+                        <label class="fl">Правильный SQL (correct_sql)</label>
+                        <textarea class="ft" id="newCorrectSql" placeholder="SELECT name, rating&#10;FROM couriers&#10;WHERE rating > 4.5&#10;ORDER BY rating DESC"></textarea>
+                    </div>
+                    <div style="margin-bottom:1rem">
+                        <div class="coll-hdr" onclick="toggleColl(this)">init.sql — схема + данные для H2</div>
+                        <div class="coll-body">
+                            <div style="padding-top:.8rem">
+                                <div style="font-family:var(--fm);font-size:.63rem;color:#888;margin-bottom:.4rem">Загружается в MinIO · выполняется в H2 перед каждой посылкой</div>
+                                <textarea class="ft init-sql" id="newInitSql" placeholder="CREATE TABLE couriers (&#10;  id BIGINT PRIMARY KEY AUTO_INCREMENT,&#10;  name VARCHAR(100),&#10;  rating DECIMAL(3,2)&#10;);&#10;INSERT INTO couriers VALUES (1,'Иван',4.8),(2,'Мария',4.2);"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:1rem">
+                        <div class="coll-hdr" onclick="toggleColl(this)">Validator.java — кастомная проверка (опц.)</div>
+                        <div class="coll-body">
+                            <div style="padding-top:.8rem">
+                                <div style="font-family:var(--fm);font-size:.63rem;color:#888;margin-bottom:.4rem">Реализует TaskValidator · загружается в MinIO · компилируется динамически</div>
+                                <textarea class="ft val-code" id="newValidator" placeholder="public class MyValidator implements TaskValidator {&#10;  public boolean validate(List&lt;Map&lt;String,Object&gt;&gt; c,&#10;                          List&lt;Map&lt;String,Object&gt;&gt; u) {&#10;    return c.size() == u.size();&#10;  }&#10;}"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fg">
+                        <label class="fl">Лимит времени (мс)</label>
+                        <input class="fi" type="number" id="newTl" value="10000" min="500">
+                    </div>
+                    <button class="btn btn-royal btn-full" onclick="createTask()">Создать задачу →</button>
+                </div>
+            </div>
+
+            <!-- RIGHT: DB + MANAGE -->
+            <div>
+                <div class="mac-win reveal" style="margin-bottom:1.5rem">
+                    <div class="mac-titlebar">
+                        <div class="mac-btn-wrap">
+                            <div class="mac-btn red"></div>
+                            <div class="mac-btn yel"></div>
+                            <div class="mac-btn grn"></div>
+                        </div>
+                        <div class="mac-win-title">databases.sh — POST /sqlservice/databases</div>
+                    </div>
+                    <div class="mac-content">
+                        <h3 style="font-family:var(--fd);font-size:1.6rem;margin-bottom:1rem">+ БАЗА ДАННЫХ</h3>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+                            <div class="fg"><label class="fl">Имя БД</label><input class="fi" type="text" id="dbName" placeholder="courier_db"></div>
+                            <div class="fg"><label class="fl">Схема</label><input class="fi" type="text" id="dbSchema" value="public"></div>
+                        </div>
+                        <button class="btn btn-blue btn-full" onclick="createDb()">Создать БД →</button>
+                    </div>
+                </div>
+
+                <div class="mac-win reveal">
+                    <div class="mac-titlebar">
+                        <div class="mac-btn-wrap">
+                            <div class="mac-btn red"></div>
+                            <div class="mac-btn yel"></div>
+                            <div class="mac-btn grn"></div>
+                        </div>
+                        <div class="mac-win-title">manage-task.sh — PATCH · DELETE /tasks/{id}</div>
+                    </div>
+                    <div class="mac-content">
+                        <h3 style="font-family:var(--fd);font-size:1.6rem;margin-bottom:1rem">УПРАВЛЕНИЕ ЗАДАЧЕЙ</h3>
+                        <div class="fg"><label class="fl">ID задачи</label><input class="fi" type="number" id="mngId" placeholder="1"></div>
+                        <div class="fg"><label class="fl">Новое название (опц.)</label><input class="fi" type="text" id="mngTitle" placeholder="Не менять если пусто"></div>
+                        <div class="fg"><label class="fl">Новый лимит мс (опц.)</label><input class="fi" type="number" id="mngTl" placeholder="10000"></div>
+                        <div style="margin-bottom:1rem">
+                            <div class="coll-hdr" onclick="toggleColl(this)">Обновить init.sql в MinIO</div>
+                            <div class="coll-body">
+                                <div style="padding-top:.7rem">
+                                    <textarea class="ft init-sql" id="mngInitSql" style="min-height:100px" placeholder="-- Новый init.sql (перезапишет в MinIO)"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:.6rem">
+                            <button class="btn btn-ghost btn-sm" onclick="updateTask()" style="flex:1">Обновить ✎</button>
+                            <button class="btn btn-acc btn-sm" onclick="deleteTask()" style="flex:1">Удалить ✕</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /app-shell -->
+
+<!-- MODAL: Task Detail -->
+<div class="modal-bg" id="modalTask">
+    <div class="modal">
+        <div class="mac-titlebar blue" style="border-radius:6px 6px 0 0">
+            <div class="mac-btn-wrap">
+                <div class="mac-btn red" onclick="closeModal('modalTask')"></div>
+                <div class="mac-btn yel"></div>
+                <div class="mac-btn grn"></div>
+            </div>
+            <div class="mac-win-title" id="modalTaskTitle">task-detail.md</div>
+        </div>
+        <div class="mac-content" id="modalTaskBody"></div>
     </div>
 </div>
 
 <script>
-    // ─── STATE ───────────────────────────────────────────────────
-    const API = '';  // base URL — пустой = relative (Thymeleaf)
-    let allTasks = [];
-    let allSubmissions = [];
-    let lbData = [];
-    let currentLbFilter = 'ALL';
+    // ═══════════════════════════════ STATE ═══════════════════════════════
+    let allTasks=[], lbData=[], lbFilter='ALL';
 
-    // ─── CURSOR ──────────────────────────────────────────────────
-    const dot  = document.getElementById('cursorDot');
-    const ring = document.getElementById('cursorRing');
-    let mx = 0, my = 0, rx = 0, ry = 0;
-    document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
-    (function animCursor() {
-      rx += (mx - rx) * 0.18;
-      ry += (my - ry) * 0.18;
-      dot.style.left  = mx + 'px'; dot.style.top  = my + 'px';
-      ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
-      requestAnimationFrame(animCursor);
+    // ═══════════════════════════════ CURSOR ══════════════════════════════
+    const cd=document.getElementById('cd'), cr=document.getElementById('cr');
+    let mx=0,my=0,rx=0,ry=0;
+    document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+    (function animCur(){
+      rx+=(mx-rx)*.16; ry+=(my-ry)*.16;
+      cd.style.left=mx+'px'; cd.style.top=my+'px';
+      cr.style.left=rx+'px'; cr.style.top=ry+'px';
+      requestAnimationFrame(animCur);
     })();
-    document.querySelectorAll('button, a, .task-card, .nav-link').forEach(el => {
-      el.addEventListener('mouseenter', () => {
-        dot.style.width = '20px'; dot.style.height = '20px';
-        dot.style.background = 'var(--sunny)';
-        ring.style.width = '50px'; ring.style.height = '50px';
+    document.querySelectorAll('button,a,.task-card,.mac-btn,.tab-btn').forEach(el=>{
+      el.addEventListener('mouseenter',()=>{
+        cd.style.width='20px'; cd.style.height='20px'; cd.style.background='var(--acc)';
+        cr.style.width='48px'; cr.style.height='48px';
       });
-      el.addEventListener('mouseleave', () => {
-        dot.style.width = '12px'; dot.style.height = '12px';
-        dot.style.background = 'var(--ruby)';
-        ring.style.width = '36px'; ring.style.height = '36px';
+      el.addEventListener('mouseleave',()=>{
+        cd.style.width='14px'; cd.style.height='14px'; cd.style.background='var(--royal)';
+        cr.style.width='36px'; cr.style.height='36px';
       });
     });
 
-    // ─── SCROLL PROGRESS ─────────────────────────────────────────
-    window.addEventListener('scroll', () => {
-      const h = document.documentElement.scrollHeight - window.innerHeight;
-      document.getElementById('progress-bar').style.width = (window.scrollY / h * 100) + '%';
+    // ═══════════════════════════════ SCROLL ══════════════════════════════
+    window.addEventListener('scroll',()=>{
+      const h=document.documentElement.scrollHeight-window.innerHeight;
+      document.getElementById('prog').style.width=(window.scrollY/h*100)+'%';
     });
 
-    // ─── SCROLL REVEAL ────────────────────────────────────────────
-    const revealObs = new IntersectionObserver((entries) => {
-      entries.forEach((e, i) => {
-        if (e.isIntersecting) {
-          setTimeout(() => e.target.classList.add('visible'), i * 80);
-          revealObs.unobserve(e.target);
-        }
-      });
-    }, { threshold: 0.1 });
-    document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+    // Reveal
+    const ro=new IntersectionObserver(es=>{
+      es.forEach((e,i)=>{if(e.isIntersecting){setTimeout(()=>e.target.classList.add('vis'),i*60);ro.unobserve(e.target);}});
+    },{threshold:.1});
+    document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
 
-    // ─── TASK CARD REVEAL ─────────────────────────────────────────
-    const cardObs = new IntersectionObserver((entries) => {
-      entries.forEach((e, i) => {
-        if (e.isIntersecting) {
-          setTimeout(() => e.target.classList.add('visible'), i * 100);
-          cardObs.unobserve(e.target);
-        }
-      });
-    }, { threshold: 0.05 });
+    // Card reveal
+    const co=new IntersectionObserver(es=>{
+      es.forEach((e,i)=>{if(e.isIntersecting){setTimeout(()=>e.target.classList.add('vis'),i*80);co.unobserve(e.target);}});
+    },{threshold:.05});
 
-    // ─── PARALLAX ────────────────────────────────────────────────
-    window.addEventListener('scroll', () => {
-      const el = document.getElementById('parallaxText');
-      const strip = el?.closest('.parallax-strip');
-      if (!strip) return;
-      const rect = strip.getBoundingClientRect();
-      const progress = -rect.top / window.innerHeight;
-      el.style.transform = `translateX(${progress * -120}px)`;
+    // Parallax
+    window.addEventListener('scroll',()=>{
+      const bg=document.getElementById('parBg');
+      const fg=document.getElementById('parFg');
+      if(!bg||!fg)return;
+      const strip=bg.closest('.par-strip');
+      if(!strip)return;
+      const r=strip.getBoundingClientRect();
+      const p=-r.top/window.innerHeight;
+      bg.style.transform=`translateX(${p*-80}px)`;
+      fg.style.transform=`translateX(${p*40}px)`;
     });
 
-    // ─── NAV ACTIVE ──────────────────────────────────────────────
-    const sections = ['tasks-section','submit-section','leaderboard-section','status-section','admin-section','containers-section'];
-    const navLinks  = document.querySelectorAll('.nav-link');
-    window.addEventListener('scroll', () => {
-      let current = '';
-      sections.forEach(id => {
-        const sec = document.getElementById(id);
-        if (sec && window.scrollY >= sec.offsetTop - 120) current = id;
-      });
-      navLinks.forEach(lnk => {
-        lnk.classList.toggle('active', lnk.getAttribute('href') === '#' + current);
-      });
-    });
-
-    // ─── KEYBOARD SHORTCUT ───────────────────────────────────────
-    document.addEventListener('keydown', e => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') submitSolution();
-    });
-
-    // ─── TOAST ───────────────────────────────────────────────────
-    function toast(msg, type = 'info', duration = 3500) {
-      const c = document.getElementById('toastContainer');
-      const t = document.createElement('div');
-      const icons = { success: '✓', error: '✕', info: '→' };
-      t.className = `toast ${type}`;
-      t.innerHTML = `<span>${icons[type]||'→'}</span><span>${msg}</span>`;
-      c.appendChild(t);
-      setTimeout(() => {
-        t.classList.add('removing');
-        setTimeout(() => t.remove(), 350);
-      }, duration);
-    }
-
-    // ─── API HELPERS ─────────────────────────────────────────────
-    async function apiGet(path) {
-      try {
-        const r = await fetch('/sqlservice' + path);
-        if (!r.ok) throw new Error(await r.text());
-        return await r.json();
-      } catch(e) { toast('Ошибка: ' + e.message, 'error'); return null; }
-    }
-    async function apiPost(path, body) {
-      try {
-        const r = await fetch('/sqlservice' + path, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        });
-        const data = await r.json();
-        if (!data.success) throw new Error(data.error || 'Ошибка сервера');
-        return data.data;
-      } catch(e) { toast('Ошибка: ' + e.message, 'error'); return null; }
-    }
-    async function apiPatch(path, body) {
-      try {
-        const r = await fetch('/sqlservice' + path, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        });
-        const data = await r.json();
-        if (!data.success) throw new Error(data.error || 'Ошибка сервера');
-        return data.data;
-      } catch(e) { toast('Ошибка: ' + e.message, 'error'); return null; }
-    }
-    async function apiDelete(path) {
-      try {
-        const r = await fetch('/sqlservice' + path, { method: 'DELETE' });
-        const data = await r.json();
-        if (!data.success) throw new Error(data.error || 'Ошибка сервера');
-        return true;
-      } catch(e) { toast('Ошибка: ' + e.message, 'error'); return false; }
-    }
-
-    // ─── TASKS ───────────────────────────────────────────────────
-    async function loadTasks() {
-      const grid = document.getElementById('tasksGrid');
-      grid.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>';
-      const res = await apiGet('/tasks');
-      if (!res) return;
-      allTasks = res.data || [];
-      document.getElementById('heroTaskCount').textContent = allTasks.length;
-      renderTasks(allTasks);
-      populateTaskSelects(allTasks);
-    }
-
-    function renderTasks(tasks) {
-      const grid = document.getElementById('tasksGrid');
-      if (!tasks.length) {
-        grid.innerHTML = '<div class="empty-state">Задач пока нет. Создай первую в разделе «Управление».</div>';
-        return;
-      }
-      grid.innerHTML = tasks.map(t => `
-        <div class="task-card" onclick="openTaskDetail(${t.taskId})">
-          <div class="task-card-corner"></div>
-          <span class="task-card-type ${t.type}">${t.type}</span>
-          <h3>${t.title || 'Без названия'}</h3>
-          <p>${(t.description || '').slice(0, 120)}${t.description?.length > 120 ? '…' : ''}</p>
-          <div class="task-card-footer">
-            <span class="task-card-time">⏱ ${t.timeLimitMs || 30000} мс</span>
-            <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); selectTaskForSubmit(${t.taskId})">
-              Решить →
-            </button>
-          </div>
-        </div>
-      `).join('');
-      document.querySelectorAll('.task-card').forEach(c => cardObs.observe(c));
-    }
-
-    function filterTasks() {
-      const type = document.getElementById('taskTypeFilter').value;
-      const db   = document.getElementById('taskDbFilter').value;
-      let filtered = allTasks;
-      if (type) filtered = filtered.filter(t => t.type === type);
-      if (db)   filtered = filtered.filter(t => t.database?.id == db);
-      renderTasks(filtered);
-    }
-
-    function populateTaskSelects(tasks) {
-      const opts = tasks.map(t => `<option value="${t.taskId}">${t.taskId}. ${t.title}</option>`).join('');
-      ['submitTaskId','lbTaskId'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.innerHTML = '<option value="">— Выбрать задачу —</option>' + opts;
-      });
-    }
-
-    function selectTaskForSubmit(taskId) {
-      document.getElementById('submitTaskId').value = taskId;
-      document.getElementById('submit-section').scrollIntoView({ behavior: 'smooth' });
-      toast('Задача выбрана! Введи свой SQL ↓', 'success');
-    }
-
-    function openTaskDetail(taskId) {
-      const task = allTasks.find(t => t.taskId === taskId);
-      if (!task) return;
-      document.getElementById('modalTaskTitle').textContent = task.title || 'Задача #' + taskId;
-      document.getElementById('modalTaskBody').innerHTML = `
-        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
-          <span class="tag">${task.type}</span>
-          <span class="tag">ID: ${task.taskId}</span>
-          <span class="tag">⏱ ${task.timeLimitMs} мс</span>
-        </div>
-        <p style="font-family:var(--font-body); line-height:1.6; margin-bottom:1rem;">
-          ${task.description || 'Описание отсутствует.'}
-        </p>
-        <button class="btn btn-primary" onclick="closeModal('modalTaskDetail'); selectTaskForSubmit(${task.taskId})" style="width:100%">
-          Решить эту задачу →
-        </button>
-      `;
-      openModal('modalTaskDetail');
-    }
-
-    // ─── DATABASES ────────────────────────────────────────────────
-    async function loadDatabases() {
-      const res = await apiGet('/databases');
-      if (!res) return;
-      const dbs = res.data || [];
-      const opts = dbs.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
-      ['newTaskDbId','rcDbId'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.innerHTML = '<option value="">— Выбрать БД —</option>' + opts;
-      });
-      const dbFilter = document.getElementById('taskDbFilter');
-      if (dbFilter) dbFilter.innerHTML = '<option value="">Все базы данных</option>' + opts;
-    }
-
-    async function createDatabase() {
-      const name   = document.getElementById('newDbName').value.trim();
-      const schema = document.getElementById('newDbSchema').value.trim();
-      if (!name || !schema) { toast('Заполни имя и схему', 'error'); return; }
-      const res = await apiPost('/databases', { name, schemaName: schema });
-      if (res) {
-        toast(`БД "${res.name}" создана!`, 'success');
-        document.getElementById('newDbName').value = '';
-        document.getElementById('newDbSchema').value = '';
-        await loadDatabases();
-      }
-    }
-
-    // ─── SUBMIT ───────────────────────────────────────────────────
-    async function submitSolution() {
-      const taskId      = document.getElementById('submitTaskId').value;
-      const userId      = document.getElementById('submitUserId').value.trim();
-      const userSqlQuery= document.getElementById('submitSql').value.trim();
-
-      if (!taskId || !userId || !userSqlQuery) {
-        toast('Заполни все поля!', 'error'); return;
-      }
-
-      const btn = document.getElementById('submitBtn');
-      btn.classList.add('btn-loading');
-      btn.textContent = 'Отправляю...';
-      btn.disabled = true;
-
-      showVerdictPending();
-
-      const res = await apiPost('/submissions', { taskId: +taskId, userId, userSqlQuery });
-      btn.classList.remove('btn-loading');
-      btn.textContent = 'Отправить решение →';
-      btn.disabled = false;
-
-      if (res !== null && res !== undefined) {
-        toast(`Посылка #${res} отправлена! Жди вердикт...`, 'success');
-        pollVerdict(res);
-      }
-    }
-
-    function showVerdictPending() {
-      const d = document.getElementById('verdictDisplay');
-      d.className = 'verdict-display pending';
-      d.innerHTML = `
-        <div class="verdict-icon">⏳</div>
-        <div class="verdict-text">PENDING</div>
-        <div class="verdict-sub">Kafka обрабатывает...</div>
-        <div class="verdict-bar" style="width:0%; animation: loadBar 3s linear forwards;"></div>
-      `;
-    }
-
-    async function pollVerdict(submissionId, attempts = 0) {
-      if (attempts > 20) { showVerdictError('Таймаут ожидания'); return; }
-      const res = await apiGet('/submissions/' + submissionId);
-      if (!res) return;
-      const s = res.data;
-      if (s.status === 'PENDING' || s.status === 'ERROR' && attempts < 2) {
-        setTimeout(() => pollVerdict(submissionId, attempts + 1), 1500);
-        return;
-      }
-      showVerdictResult(s);
-      await loadSubmissionStats();
-    }
-
-    const VERDICT_CONFIG = {
-      ACCEPTED:              { icon: '✓', text: 'ACCEPTED',  cls: 'accepted', color: '#00cc66' },
-      WRONG_ANSWER:          { icon: '✗', text: 'WRONG',     cls: 'wrong',    color: 'var(--ruby)' },
-      TIME_LIMIT_EXCEEDED:   { icon: '⏱', text: 'TLE',       cls: 'wrong',    color: 'var(--sunny)' },
-      COMPILATION_ERROR:     { icon: '⚡', text: 'SYNTAX',   cls: 'wrong',    color: '#ff6b6b' },
-      RUNTIME_ERROR:         { icon: '💥', text: 'RUNTIME',  cls: 'wrong',    color: '#ff6b6b' },
-      SECURITY_VIOLATION:    { icon: '🔒', text: 'BLOCKED',  cls: 'wrong',    color: var_ruby() },
-      SYSTEM_ERROR:          { icon: '⚠', text: 'SYSTEM ERR',cls: 'wrong',    color: '#aaa' },
-      PRESENTATION_ERROR:    { icon: '📋', text: 'PRES ERR', cls: 'wrong',    color: '#aaa' },
-    };
-    function var_ruby() { return 'var(--ruby)'; }
-
-    function showVerdictResult(s) {
-      const cfg = VERDICT_CONFIG[s.verdict] || { icon: '?', text: s.verdict, cls: '', color: '#aaa' };
-      const d = document.getElementById('verdictDisplay');
-      d.className = 'verdict-display ' + cfg.cls;
-      d.innerHTML = `
-        <div class="verdict-icon">${cfg.icon}</div>
-        <div class="verdict-text" style="color:${cfg.color}">${cfg.text}</div>
-        ${s.executionTimeMs ? `<div class="verdict-sub">⏱ ${s.executionTimeMs} мс</div>` : ''}
-        ${s.kafkaOffset !== null ? `<div class="verdict-sub">Offset: ${s.kafkaOffset}</div>` : ''}
-        ${s.errorMessage ? `<div style="font-family:var(--font-mono);font-size:0.65rem;color:#666;padding:0.5rem;max-width:100%;word-break:break-all;">${s.errorMessage.slice(0,100)}</div>` : ''}
-        <div class="verdict-bar" style="width:100%; background:${cfg.color};"></div>
-      `;
-      if (cfg.cls === 'accepted') confetti();
-    }
-
-    function showVerdictError(msg) {
-      const d = document.getElementById('verdictDisplay');
-      d.className = 'verdict-display wrong';
-      d.innerHTML = `<div class="verdict-icon">⚠</div><div class="verdict-text">ОШИБКА</div><div class="verdict-sub">${msg}</div>`;
-    }
-
-    // Mini confetti
-    function confetti() {
-      const colors = ['var(--ruby)', 'var(--sunny)', 'var(--natural)', '#fff'];
-      for (let i = 0; i < 60; i++) {
-        const el = document.createElement('div');
-        el.style.cssText = `position:fixed;width:${4+Math.random()*6}px;height:${4+Math.random()*6}px;
-          background:${colors[Math.floor(Math.random()*colors.length)]};
-          left:${30+Math.random()*40}%;top:40%;border-radius:${Math.random()>0.5?'50%':'0'};
-          pointer-events:none;z-index:9000;transform-origin:center;`;
-        document.body.appendChild(el);
-        const angle = (Math.random() - 0.5) * 2 * Math.PI;
-        const dist  = 100 + Math.random() * 300;
-        el.animate([
-          { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
-          { transform: `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist - 150}px) rotate(${720*Math.random()}deg)`, opacity: 0 }
-        ], { duration: 1200 + Math.random() * 600, easing: 'cubic-bezier(0,0.9,0.57,1)', fill: 'forwards' })
-        .onfinish = () => el.remove();
-      }
-    }
-
-    // ─── SUBMISSION STATS ─────────────────────────────────────────
-    async function loadSubmissionStats() {
-      const res = await apiGet('/submissions');
-      if (!res) return;
-      const subs = res.data || [];
-      allSubmissions = subs;
-      document.getElementById('statTotal').textContent = subs.length;
-      document.getElementById('statAc').textContent = subs.filter(s => s.verdict === 'ACCEPTED').length;
-      document.getElementById('statWa').textContent = subs.filter(s => s.verdict === 'WRONG_ANSWER').length;
-      document.getElementById('statPend').textContent = subs.filter(s => s.status === 'PENDING').length;
-    }
-
-    // ─── LEADERBOARD ──────────────────────────────────────────────
-    async function loadLeaderboard() {
-      const taskId = document.getElementById('lbTaskId').value;
-      if (!taskId) { toast('Выбери задачу', 'error'); return; }
-      const res = await apiGet('/submissions/leaderboard?taskId=' + taskId);
-      if (!res) return;
-      lbData = res.data || [];
-      renderLeaderboard(lbData);
-    }
-
-    function filterLeaderboard(verdict, btn) {
-      currentLbFilter = verdict;
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    // ═══════════════════════════════ TABS ════════════════════════════════
+    function switchTab(name, btn){
+      document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.getElementById('tab-'+name).classList.add('active');
       btn.classList.add('active');
-      const filtered = verdict === 'ALL' ? lbData : lbData.filter(s => s.verdict === verdict);
-      renderLeaderboard(filtered);
+      // re-observe reveals in new tab
+      document.querySelectorAll('#tab-'+name+' .reveal').forEach(el=>ro.observe(el));
+      window.scrollTo({top:document.getElementById('tabsNav').offsetTop-10,behavior:'smooth'});
+    }
+    function scrollToTop(){window.scrollTo({top:0,behavior:'smooth'});}
+
+    // ═══════════════════════════════ KEYBOARD ════════════════════════════
+    document.addEventListener('keydown',e=>{
+      if((e.ctrlKey||e.metaKey)&&e.key==='Enter')submitSolution();
+      if(e.key==='Escape')document.querySelectorAll('.modal-bg.open').forEach(m=>closeModal(m.id));
+    });
+
+    // ═══════════════════════════════ COLLAPSIBLE ═════════════════════════
+    function toggleColl(hdr){
+      hdr.classList.toggle('open');
+      hdr.nextElementSibling.classList.toggle('open');
     }
 
-    function renderLeaderboard(data) {
-      const tbody = document.getElementById('leaderboardBody');
-      if (!data.length) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:#555;">Нет посылок</td></tr>';
-        return;
-      }
-      const medals = ['🥇','🥈','🥉'];
-      tbody.innerHTML = data.map((s, i) => {
-        const vMap = {
-          ACCEPTED:'ac', WRONG_ANSWER:'wa',
-          TIME_LIMIT_EXCEEDED:'tl', COMPILATION_ERROR:'ce', RUNTIME_ERROR:'re'
-        };
-        const vcls = vMap[s.verdict] || 're';
-        return `<tr>
-          <td>${medals[i] || (i+1)}</td>
-          <td style="font-size:0.7rem;">${(s.userId||'').slice(0,8)}…</td>
-          <td>${s.task?.title || s.task?.taskId || '—'}</td>
-          <td><span class="verdict-badge ${vcls}">${s.verdict}</span></td>
-          <td>${s.executionTimeMs ?? '—'}</td>
-          <td style="color:var(--sunny)">${s.kafkaOffset ?? '—'}</td>
-          <td style="font-size:0.7rem;">${s.createdAt ? new Date(s.createdAt).toLocaleString('ru') : '—'}</td>
-        </tr>`;
-      }).join('');
+    // ═══════════════════════════════ TOAST ═══════════════════════════════
+    function toast(msg,type='info',dur=3500){
+      const c=document.getElementById('toasts');
+      const t=document.createElement('div');
+      t.className=`toast ${type}`;
+      t.innerHTML=`<span>${{ok:'✓',err:'✕',info:'›'}[type]||'›'}</span><span>${msg}</span>`;
+      c.appendChild(t);
+      setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),300);},dur);
     }
 
-    // ─── STATUS LOOKUP ────────────────────────────────────────────
-    async function lookupStatus() {
-      const id = document.getElementById('statusLookupId').value;
-      if (!id) { toast('Введи ID посылки', 'error'); return; }
-      const res = await apiGet('/submissions/' + id);
-      if (!res) return;
-      const s = res.data;
-      const container = document.getElementById('statusCards');
-      const fields = [
-        { label: 'Submission ID', value: s.submissionId },
-        { label: 'Статус',  value: s.status },
-        { label: 'Вердикт', value: s.verdict },
-        { label: 'Время',   value: s.executionTimeMs ? s.executionTimeMs + ' мс' : '—' },
-        { label: 'Kafka Offset', value: s.kafkaOffset ?? '—' },
-      ];
-      container.innerHTML = fields.map(f => `
-        <div class="status-card">
-          <div class="status-card-label">${f.label}</div>
-          <div class="status-card-value">${f.value ?? '—'}</div>
-        </div>
-      `).join('');
-      setTimeout(() => container.querySelectorAll('.status-card').forEach((c,i) => {
-        setTimeout(() => c.classList.add('show'), i * 80);
-      }), 50);
-      if (s.errorMessage) toast('Ошибка: ' + s.errorMessage, 'error', 5000);
+    // ═══════════════════════════════ API ═════════════════════════════════
+    async function apiGet(p){
+      try{const r=await fetch('/sqlservice'+p);if(!r.ok)throw new Error(await r.text());return await r.json();}
+      catch(e){toast('Ошибка: '+e.message,'err');return null;}
+    }
+    async function apiPost(p,body){
+      try{
+        const r=await fetch('/sqlservice'+p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        const d=await r.json();if(!d.success)throw new Error(d.error||'Ошибка');return d.data;
+      }catch(e){toast('Ошибка: '+e.message,'err');return null;}
+    }
+    async function apiPatch(p,body){
+      try{
+        const r=await fetch('/sqlservice'+p,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        const d=await r.json();if(!d.success)throw new Error(d.error||'Ошибка');return d.data;
+      }catch(e){toast('Ошибка: '+e.message,'err');return null;}
+    }
+    async function apiDel(p){
+      try{
+        const r=await fetch('/sqlservice'+p,{method:'DELETE'});
+        const d=await r.json();if(!d.success)throw new Error(d.error||'Ошибка');return true;
+      }catch(e){toast('Ошибка: '+e.message,'err');return false;}
     }
 
-    // ─── ADMIN: CREATE TASK ───────────────────────────────────────
-    async function createTask() {
-      const body = {
-        databaseId:   +document.getElementById('newTaskDbId').value,
-        title:         document.getElementById('newTaskTitle').value.trim(),
-        type:          document.getElementById('newTaskType').value,
-        description:   document.getElementById('newTaskDesc').value.trim(),
-        correctSqlQuery: document.getElementById('newTaskSql').value.trim(),
-        timeLimitMs:  +document.getElementById('newTaskTl').value || 30000,
-      };
-      if (!body.databaseId || !body.title || !body.correctSqlQuery) {
-        toast('БД, название и SQL — обязательны', 'error'); return;
-      }
-      const res = await apiPost('/tasks', body);
-      if (res) {
-        toast(`Задача "${res.title}" создана! ID: ${res.taskId}`, 'success');
-        ['newTaskTitle','newTaskDesc','newTaskSql'].forEach(id =>
-          document.getElementById(id).value = '');
-        await loadTasks();
-      }
+    // ═══════════════════════════════ TASKS ═══════════════════════════════
+    async function loadTasks(){
+      document.getElementById('tasksGrid').innerHTML='<div class="skel"></div><div class="skel"></div><div class="skel"></div>';
+      const res=await apiGet('/tasks');
+      if(!res)return;
+      allTasks=res.data||[];
+      document.getElementById('heroCount').textContent=allTasks.length;
+      renderTasks(allTasks);
+      populateSelects(allTasks);
     }
-
-    async function updateTask() {
-      const id    = document.getElementById('manageTaskId').value;
-      const title = document.getElementById('manageTaskTitle').value.trim() || undefined;
-      const tl    = document.getElementById('manageTaskTl').value || undefined;
-      if (!id) { toast('Введи ID задачи', 'error'); return; }
-      const body = {};
-      if (title) body.title = title;
-      if (tl)    body.timeLimitMs = +tl;
-      if (!Object.keys(body).length) { toast('Нечего обновлять', 'error'); return; }
-      const res = await apiPatch('/tasks/' + id, body);
-      if (res) {
-        toast(`Задача #${id} обновлена`, 'success');
-        await loadTasks();
-      }
-    }
-
-    async function deleteTask() {
-      const id = document.getElementById('manageTaskId').value;
-      if (!id) { toast('Введи ID задачи', 'error'); return; }
-      if (!confirm(`Удалить задачу #${id}? Кеш тоже удалится.`)) return;
-      const ok = await apiDelete('/tasks/' + id);
-      if (ok) { toast(`Задача #${id} удалена`, 'info'); await loadTasks(); }
-    }
-
-    // ─── CONTAINERS ───────────────────────────────────────────────
-    async function loadContainers() {
-      const status = document.getElementById('containerStatusFilter').value;
-      const path   = status ? '/containers?status=' + status : '/containers';
-      const res    = await apiGet(path);
-      if (!res) return;
-      const containers = res.data || [];
-      const grid = document.getElementById('containersGrid');
-      if (!containers.length) {
-        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Контейнеры не найдены</div>';
-        return;
-      }
-      grid.innerHTML = containers.map(c => `
-        <div class="container-card">
-          <div style="display:flex; align-items:center; margin-bottom:0.4rem;">
-            <span class="container-status-dot ${c.status}"></span>
-            <strong style="font-family:var(--font-display); font-size:1.2rem;">${c.status}</strong>
+    function renderTasks(tasks){
+      const g=document.getElementById('tasksGrid');
+      if(!tasks.length){g.innerHTML='<div class="empty">Нет задач. Создай в разделе «Управление».</div>';return;}
+      g.innerHTML=tasks.map(t=>`
+        <div class="task-card" onclick="openTaskModal(${t.taskId})">
+          <div class="task-corner"></div>
+          <div style="margin-bottom:.6rem">
+            <span class="task-type ${t.type}">${t.type}</span>
+            ${t.initScriptKey?'<span class="badge-h2">H2</span>':''}
+            ${t.validatorScriptKey?'<span class="badge-custom">CUSTOM</span>':''}
           </div>
-          <div class="container-host">${c.host}:${c.port}</div>
-          <div class="container-id">${c.containerId}</div>
-          <div style="font-family:var(--font-mono);font-size:0.7rem;color:#888;margin-top:0.3rem;">
-            БД: ${c.database?.name || '—'}
-          </div>
-          <div class="container-actions">
-            <button class="btn btn-ghost btn-sm" onclick="updateContainerStatus(${c.id}, 'RUNNING')">▶</button>
-            <button class="btn btn-ghost btn-sm" onclick="updateContainerStatus(${c.id}, 'PAUSED')">⏸</button>
-            <button class="btn btn-ruby btn-sm" onclick="removeContainer(${c.id})">✕</button>
+          <h3>${t.title||'Без названия'}</h3>
+          <p>${(t.description||'').slice(0,110)}${(t.description||'').length>110?'…':''}</p>
+          <div class="task-footer">
+            <span class="task-meta">⏱ ${t.timeLimitMs||30000}мс · #${t.taskId}</span>
+            <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();selectTask(${t.taskId})">Решить →</button>
           </div>
         </div>
       `).join('');
+      document.querySelectorAll('.task-card').forEach(c=>co.observe(c));
     }
-
-    async function updateContainerStatus(id, status) {
-      const res = await apiPatch('/containers/' + id + '/status?value=' + status, {});
-      if (res) { toast(`Контейнер ${id}: ${status}`, 'success'); await loadContainers(); }
+    function filterTasks(){
+      const type=document.getElementById('filterType').value;
+      renderTasks(type?allTasks.filter(t=>t.type===type):allTasks);
     }
-
-    async function removeContainer(id) {
-      if (!confirm(`Удалить контейнер #${id}?`)) return;
-      const ok = await apiDelete('/containers/' + id);
-      if (ok) { toast(`Контейнер #${id} удалён`, 'info'); await loadContainers(); }
-    }
-
-    async function registerContainer() {
-      const body = {
-        databaseId:  +document.getElementById('rcDbId').value,
-        containerId:  document.getElementById('rcContainerId').value.trim(),
-        host:         document.getElementById('rcHost').value.trim(),
-        port:        +document.getElementById('rcPort').value,
-      };
-      if (!body.databaseId || !body.containerId || !body.host || !body.port) {
-        toast('Заполни все поля', 'error'); return;
-      }
-      const res = await apiPost('/containers', body);
-      if (res) {
-        toast(`Контейнер зарегистрирован!`, 'success');
-        closeModal('modalRegisterContainer');
-        await loadContainers();
-      }
-    }
-
-    // ─── MODALS ───────────────────────────────────────────────────
-    function openModal(id) {
-      document.getElementById(id).classList.add('open');
-      document.body.style.overflow = 'hidden';
-    }
-    function closeModal(id) {
-      document.getElementById(id).classList.remove('open');
-      document.body.style.overflow = '';
-    }
-    function openRegisterContainerModal() { openModal('modalRegisterContainer'); }
-    document.querySelectorAll('.modal-backdrop').forEach(m => {
-      m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
-    });
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape')
-        document.querySelectorAll('.modal-backdrop.open').forEach(m => closeModal(m.id));
-    });
-
-    // ─── UUID AUTOFILL ────────────────────────────────────────────
-    function generateUUID() {
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-        const r = Math.random() * 16 | 0;
-        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    function populateSelects(tasks){
+      const opts=tasks.map(t=>`<option value="${t.taskId}">${t.taskId}. ${t.title}</option>`).join('');
+      ['subTaskId','lbTask'].forEach(id=>{
+        const el=document.getElementById(id);
+        if(el)el.innerHTML='<option value="">— Выбрать задачу —</option>'+opts;
       });
     }
-    const userIdInput = document.getElementById('submitUserId');
-    if (!userIdInput.value) userIdInput.value = generateUUID();
+    function selectTask(id){
+      document.getElementById('subTaskId').value=id;
+      // switch to submit tab
+      document.querySelector('.tab-btn[onclick*="submit"]').click();
+      toast('Задача выбрана! Введи SQL ↓','ok');
+    }
+    function openTaskModal(id){
+      const t=allTasks.find(x=>x.taskId===id);
+      if(!t)return;
+      document.getElementById('modalTaskTitle').textContent=(t.title||'Задача #'+id)+'.md';
+      document.getElementById('modalTaskBody').innerHTML=`
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem">
+          <span class="task-type ${t.type}" style="font-size:.6rem">${t.type}</span>
+          <span style="font-family:var(--fm);font-size:.6rem;border:1.5px solid var(--royal);padding:2px 7px">#${t.taskId}</span>
+          <span style="font-family:var(--fm);font-size:.6rem;border:1.5px solid var(--royal);padding:2px 7px">⏱ ${t.timeLimitMs}мс</span>
+          ${t.initScriptKey?'<span class="badge-h2">H2 script</span>':''}
+          ${t.validatorScriptKey?'<span class="badge-custom">Custom validator</span>':''}
+        </div>
+        <p style="font-size:.95rem;line-height:1.7;margin-bottom:1.3rem;font-family:var(--fb)">${t.description||'Описание отсутствует.'}</p>
+        <button class="btn btn-royal btn-full" onclick="closeModal('modalTask');selectTask(${t.taskId})">Решить эту задачу →</button>
+      `;
+      openModal('modalTask');
+    }
 
-    // ─── INIT ─────────────────────────────────────────────────────
-    async function init() {
-      await Promise.all([loadDatabases(), loadTasks(), loadContainers(), loadSubmissionStats()]);
+    // ═══════════════════════════════ DATABASES ════════════════════════════
+    async function loadDatabases(){
+      const res=await apiGet('/databases');
+      if(!res)return;
+      const dbs=res.data||[];
+      const opts=dbs.map(d=>`<option value="${d.id}">${d.name}</option>`).join('');
+      document.getElementById('newDbId').innerHTML='<option value="">— Выбрать БД —</option>'+opts;
+    }
+    async function createDb(){
+      const name=document.getElementById('dbName').value.trim();
+      const schema=document.getElementById('dbSchema').value.trim();
+      if(!name||!schema){toast('Заполни имя и схему','err');return;}
+      const res=await apiPost('/databases',{name,schemaName:schema});
+      if(res){toast(`БД "${res.name}" создана!`,'ok');document.getElementById('dbName').value='';await loadDatabases();}
+    }
+
+    // ═══════════════════════════════ PIPELINE ════════════════════════════
+    const PSids=['v','k','m','h','e','j'];
+    function resetPipe(){PSids.forEach(s=>document.getElementById('ps-'+s).className='ps');}
+    function setPipe(s,state){const el=document.getElementById('ps-'+s);if(el)el.className='ps '+state;}
+
+    // ═══════════════════════════════ SUBMIT ══════════════════════════════
+    async function submitSolution(){
+      const taskId=document.getElementById('subTaskId').value;
+      const userId=document.getElementById('subUserId').value.trim();
+      const sql=document.getElementById('subSql').value.trim();
+      if(!taskId||!userId||!sql){toast('Заполни все поля!','err');return;}
+      const btn=document.getElementById('subBtn');
+      btn.classList.add('btn-loading');btn.textContent='Отправляю...';btn.disabled=true;
+      resetPipe(); setPipe('v','active'); showVerdPending();
+      const res=await apiPost('/submissions',{taskId:+taskId,userId,userSqlQuery:sql});
+      btn.classList.remove('btn-loading');btn.textContent='Отправить → Kafka ↗';btn.disabled=false;
+      if(res!=null){
+        setPipe('v','done'); setPipe('k','active');
+        toast(`Посылка #${res} отправлена!`,'ok');
+        pollVerdict(res);
+      } else {
+        resetPipe(); setPipe('v','err');
+      }
+    }
+
+    function showVerdPending(){
+      const d=document.getElementById('verdictBox');
+      d.className='verdict-box pend';
+      d.innerHTML=`<div class="v-icon">⏳</div><div class="v-text">PENDING</div><div class="v-sub">Kafka → MinIO → H2 → Вердикт</div><div class="v-bar" style="width:55%;background:var(--royal)"></div>`;
+    }
+
+    async function pollVerdict(id,attempt=0){
+      if(attempt>25){showVerdErr('Таймаут');resetPipe();return;}
+      const res=await apiGet('/submissions/'+id);
+      if(!res)return;
+      const s=res.data;
+      if(s.status==='PENDING'){
+        const step=Math.min(attempt,3);
+        ['k','m','h','e'].forEach((ps,i)=>{
+          if(i<step)setPipe(ps,'done');
+          else if(i===step)setPipe(ps,'active');
+        });
+        setTimeout(()=>pollVerdict(id,attempt+1),1800);
+      } else {
+        showVerdResult(s);
+        PSids.forEach(ps=>setPipe(ps,'done'));
+        if(s.verdict!=='ACCEPTED')setPipe('j','err');
+        await loadStats();
+      }
+    }
+
+    const VCFG={
+      ACCEPTED:           {icon:'✓',text:'ACCEPTED',  cls:'ac', bar:'var(--grn)'},
+      WRONG_ANSWER:       {icon:'✗',text:'WRONG',     cls:'wa', bar:'var(--acc)'},
+      TIME_LIMIT_EXCEEDED:{icon:'⏱',text:'TLE',       cls:'wa', bar:'#b07d00'},
+      COMPILATION_ERROR:  {icon:'⚡',text:'SYNTAX',   cls:'wa', bar:'#888'},
+      RUNTIME_ERROR:      {icon:'💥',text:'RUNTIME',  cls:'wa', bar:'#888'},
+      SECURITY_VIOLATION: {icon:'🔒',text:'BLOCKED',  cls:'wa', bar:'var(--acc)'},
+      SYSTEM_ERROR:       {icon:'⚠', text:'SYS ERR',  cls:'sys',bar:'#aaa'},
+    };
+    function showVerdResult(s){
+      const cfg=VCFG[s.verdict]||{icon:'?',text:s.verdict,cls:'',bar:'#aaa'};
+      const d=document.getElementById('verdictBox');
+      d.className='verdict-box '+cfg.cls;
+      d.innerHTML=`
+        <div class="v-icon">${cfg.icon}</div>
+        <div class="v-text">${cfg.text}</div>
+        ${s.executionTimeMs!=null?`<div class="v-sub">⏱ ${s.executionTimeMs} мс</div>`:''}
+        ${s.kafkaOffset!=null?`<div class="v-sub" style="opacity:.6">offset ${s.kafkaOffset}</div>`:''}
+        ${s.errorMessage?`<div style="font-family:var(--fm);font-size:.6rem;color:#888;padding:.5rem;max-width:100%;word-break:break-all;text-align:center">${s.errorMessage.slice(0,120)}</div>`:''}
+        <div class="v-bar" style="width:100%;background:${cfg.bar}"></div>
+      `;
+      if(s.verdict==='ACCEPTED')confetti();
+    }
+    function showVerdErr(msg){
+      const d=document.getElementById('verdictBox');
+      d.className='verdict-box sys';
+      d.innerHTML=`<div class="v-icon">⚠</div><div class="v-text">ОШИБКА</div><div class="v-sub">${msg}</div>`;
+    }
+
+    // ═══════════════════════════════ CONFETTI ════════════════════════════
+    function confetti(){
+      const canvas=document.getElementById('cvs');
+      const ctx=canvas.getContext('2d');
+      canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+      const colors=['#162660','#D0E6FD','#F1E4D1','#e84040','#f5c842','#2dca6e'];
+      const pts=Array.from({length:70},()=>({
+        x:window.innerWidth*.25+Math.random()*window.innerWidth*.5,
+        y:window.innerHeight*.45,
+        vx:(Math.random()-.5)*11, vy:-(Math.random()*9+4),
+        r:2+Math.random()*5, color:colors[Math.floor(Math.random()*colors.length)],
+        rot:Math.random()*360, rv:(Math.random()-.5)*7,
+        alpha:1, shape:Math.random()>.5?'rect':'circle'
+      }));
+      let f=0;
+      function draw(){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        pts.forEach(p=>{
+          p.x+=p.vx; p.y+=p.vy; p.vy+=.25; p.rot+=p.rv; p.alpha-=.012;
+          if(p.alpha<=0)return;
+          ctx.save(); ctx.globalAlpha=p.alpha; ctx.fillStyle=p.color;
+          ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+          if(p.shape==='circle'){ctx.beginPath();ctx.arc(0,0,p.r,0,Math.PI*2);ctx.fill();}
+          else ctx.fillRect(-p.r,-p.r/2,p.r*2,p.r);
+          ctx.restore();
+        });
+        f++;
+        if(f<130)requestAnimationFrame(draw);
+        else ctx.clearRect(0,0,canvas.width,canvas.height);
+      }
+      draw();
+    }
+
+    // ═══════════════════════════════ STATS ═══════════════════════════════
+    async function loadStats(){
+      const res=await apiGet('/submissions');
+      if(!res)return;
+      const s=res.data||[];
+      document.getElementById('stTotal').textContent=s.length;
+      document.getElementById('stAc').textContent=s.filter(x=>x.verdict==='ACCEPTED').length;
+      document.getElementById('stWa').textContent=s.filter(x=>x.verdict==='WRONG_ANSWER').length;
+      document.getElementById('stPend').textContent=s.filter(x=>x.status==='PENDING').length;
+    }
+
+    // ═══════════════════════════════ LEADERBOARD ═════════════════════════
+    async function loadLb(){
+      const tid=document.getElementById('lbTask').value;
+      if(!tid){toast('Выбери задачу','err');return;}
+      const res=await apiGet('/submissions/leaderboard?taskId='+tid);
+      if(!res)return;
+      lbData=res.data||[];
+      renderLb(lbData);
+    }
+    function filterLb(verdict,btn){
+      lbFilter=verdict;
+      document.querySelectorAll('.lf-btn').forEach(b=>b.classList.remove('on'));
+      btn.classList.add('on');
+      renderLb(verdict==='ALL'?lbData:lbData.filter(s=>s.verdict===verdict));
+    }
+    function renderLb(data){
+      const vm={ACCEPTED:'ac',WRONG_ANSWER:'wa',TIME_LIMIT_EXCEEDED:'tl',COMPILATION_ERROR:'ce',RUNTIME_ERROR:'re',SECURITY_VIOLATION:'sec',SYSTEM_ERROR:'se'};
+      const medals=['🥇','🥈','🥉'];
+      document.getElementById('lbBody').innerHTML=!data.length
+        ?'<tr><td colspan="7" style="text-align:center;padding:2rem;color:#88aacc">Нет посылок</td></tr>'
+        :data.map((s,i)=>`<tr>
+          <td style="color:var(--blue)">${medals[i]||i+1}</td>
+          <td style="font-size:.7rem;color:var(--blue-d)">${(s.userId||'').slice(0,8)}…</td>
+          <td style="color:var(--blue)">${s.task?.title||'#'+s.task?.taskId||'—'}</td>
+          <td><span class="vbadge ${vm[s.verdict]||'se'}">${s.verdict}</span></td>
+          <td style="color:var(--blue-d)">${s.executionTimeMs??'—'}</td>
+          <td style="color:var(--sun)">${s.kafkaOffset??'—'}</td>
+          <td style="font-size:.68rem;color:var(--blue-dd)">${s.createdAt?new Date(s.createdAt).toLocaleString('ru'):'—'}</td>
+        </tr>`).join('');
+    }
+
+    // ═══════════════════════════════ STATUS ══════════════════════════════
+    async function lookupStatus(){
+      const id=document.getElementById('stLookId').value;
+      if(!id){toast('Введи ID посылки','err');return;}
+      const res=await apiGet('/submissions/'+id);
+      if(!res)return;
+      const s=res.data;
+      const fields=[
+        {l:'Submission ID',v:s.submissionId},
+        {l:'Статус',v:s.status},
+        {l:'Вердикт',v:s.verdict},
+        {l:'Время',v:s.executionTimeMs!=null?s.executionTimeMs+' мс':'—'},
+        {l:'Kafka Offset',v:s.kafkaOffset??'—'},
+        {l:'Ошибка',v:s.errorMessage||'нет'},
+      ];
+      const cont=document.getElementById('stCards');
+      cont.innerHTML=fields.map(f=>`<div class="st-card"><div class="st-lbl">${f.l}</div><div class="st-val">${f.v}</div></div>`).join('');
+      setTimeout(()=>cont.querySelectorAll('.st-card').forEach((c,i)=>setTimeout(()=>c.classList.add('show'),i*65)),50);
+      if(s.verdict==='ACCEPTED')toast('ACCEPTED! 🎉','ok');
+      else if(s.errorMessage)toast(s.errorMessage.slice(0,60),'err',5000);
+    }
+
+    // ═══════════════════════════════ ADMIN ═══════════════════════════════
+    async function createTask(){
+      const body={
+        databaseId:+document.getElementById('newDbId').value,
+        title:document.getElementById('newTitle').value.trim(),
+        type:document.getElementById('newType').value,
+        description:document.getElementById('newDesc').value.trim(),
+        correctSqlQuery:document.getElementById('newCorrectSql').value.trim(),
+        initSql:document.getElementById('newInitSql').value.trim()||null,
+        validatorJavaCode:document.getElementById('newValidator').value.trim()||null,
+        timeLimitMs:+document.getElementById('newTl').value||10000,
+      };
+      if(!body.databaseId||!body.title||!body.correctSqlQuery){toast('БД, название и SQL обязательны','err');return;}
+      const res=await apiPost('/tasks',body);
+      if(res){
+        toast(`Задача "${res.title}" создана! ID:${res.taskId}`,'ok');
+        ['newTitle','newDesc','newCorrectSql','newInitSql','newValidator'].forEach(id=>document.getElementById(id).value='');
+        await loadTasks();
+      }
+    }
+    async function updateTask(){
+      const id=document.getElementById('mngId').value;
+      if(!id){toast('Введи ID задачи','err');return;}
+      const body={};
+      const t=document.getElementById('mngTitle').value.trim();
+      const tl=document.getElementById('mngTl').value;
+      const initSql=document.getElementById('mngInitSql').value.trim();
+      if(t)body.title=t; if(tl)body.timeLimitMs=+tl; if(initSql)body.initSql=initSql;
+      if(!Object.keys(body).length){toast('Нечего обновлять','err');return;}
+      const res=await apiPatch('/tasks/'+id,body);
+      if(res){toast(`Задача #${id} обновлена`,'ok');await loadTasks();}
+    }
+    async function deleteTask(){
+      const id=document.getElementById('mngId').value;
+      if(!id){toast('Введи ID задачи','err');return;}
+      if(!confirm(`Удалить задачу #${id}? Это действие необратимо.`))return;
+      const ok=await apiDel('/tasks/'+id);
+      if(ok){toast(`Задача #${id} удалена`,'info');await loadTasks();}
+    }
+
+    // ═══════════════════════════════ MODAL ═══════════════════════════════
+    function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
+    function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
+    document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModal(m.id);}));
+
+    // ═══════════════════════════════ UUID ════════════════════════════════
+    const uEl=document.getElementById('subUserId');
+    if(!uEl.value) uEl.value='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{
+      const r=Math.random()*16|0;return(c==='x'?r:(r&0x3|0x8)).toString(16);
+    });
+
+    // ═══════════════════════════════ INIT ════════════════════════════════
+    async function init(){
+      await Promise.all([loadDatabases(),loadTasks(),loadStats()]);
     }
     init();
 </script>

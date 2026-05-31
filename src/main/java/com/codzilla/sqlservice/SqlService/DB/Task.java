@@ -1,8 +1,6 @@
 package com.codzilla.sqlservice.SqlService.DB;
 
 import com.codzilla.sqlservice.SqlService.model.TaskType;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -39,6 +37,21 @@ public class Task {
 
     @Column(name = "correct_sql", nullable = false, columnDefinition = "TEXT")
     private String correctSqlResponse;
+
+    /**
+     * Путь к init-скрипту в MinIO: "bucket/tasks/{taskId}/init.sql"
+     * Скрипт создаёт таблицы и наполняет их данными для этой задачи.
+     */
+    @Column(name = "init_script_key")
+    private String initScriptKey;
+
+    /**
+     * Путь к Java-валидатору в MinIO: "bucket/tasks/{taskId}/Validator.java"
+     * Опционально — если null, используется дефолтное сравнение результатов.
+     * Валидатор реализует интерфейс TaskValidator.
+     */
+    @Column(name = "validator_script_key")
+    private String validatorScriptKey;
 
     @Column(name = "time_limit_ms")
     private Integer timeLimitMs;

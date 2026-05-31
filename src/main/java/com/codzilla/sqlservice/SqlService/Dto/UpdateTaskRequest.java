@@ -13,5 +13,7 @@ public record UpdateTaskRequest(
         TaskType type,
         String description,
         String correctSqlQuery,
+        String initSql,              // ← добавить
+        String validatorJavaCode,    // ← добавить
         @Positive Integer timeLimitMs
 ) {}
