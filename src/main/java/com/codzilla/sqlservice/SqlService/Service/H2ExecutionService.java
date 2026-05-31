@@ -1,75 +1,56 @@
 package com.codzilla.sqlservice.SqlService.Service;
 
 import com.codzilla.sqlservice.SqlService.Dto.SqlExecutionResult;
+import com.codzilla.sqlservice.SqlService.model.TaskType;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.stereotype.Service;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 
-import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-import java.util.List;
-import java.util.Map;
-
-/**
- * Выполняет SQL над изолированной H2 in-memory БД.
- *
- * Каждый вызов executeInIsolation():
- *   1. Создаёт НОВУЮ H2 базу (уникальное имя = submissionId)
- *   2. Запускает init-скрипт (CREATE TABLE + INSERT)
- *   3. Выполняет переданный SQL-запрос
- *   4. Закрывает и уничтожает H2 базу
- *
- * Изоляция полная — пользователи не влияют друг на друга.
- * H2 работает в памяти — старт ~10-50мс vs 3-5 сек для Docker-контейнера.
- */
 @Slf4j
 @Service
 public class H2ExecutionService {
 
-    /**
-     * Выполнить SQL в изолированной H2 БД с init-скриптом.
-     *
-     * @param submissionId уникальный идентификатор — имя БД (гарантирует изоляцию)
-     * @param initSql      DDL + DML для создания схемы и данных
-     * @param userSql      запрос пользователя
-     * @param timeLimitMs  лимит времени
-     */
     public SqlExecutionResult executeInIsolation(Long submissionId,
                                                  String initSql,
                                                  String userSql,
-                                                 int timeLimitMs) {
-
+                                                 int timeLimitMs,
+                                                 TaskType taskType) {
         String dbName = "h2_submission_" + submissionId;
         EmbeddedDatabase db = null;
 
         try {
-
             db = new EmbeddedDatabaseBuilder()
                     .setType(EmbeddedDatabaseType.H2)
-                    .setName(dbName + ";DB_CLOSE_DELAY=-1")
+                    .setName(dbName + ";DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false")
                     .build();
 
             JdbcTemplate jdbc = new JdbcTemplate(db);
+
+            // 1. Выполняем init-скрипт (создание таблиц, наполнение)
             executeScript(jdbc, initSql);
+
+            // 2. Извлекаем имена таблиц, созданных в init.sql
+            List<String> tableNames = extractTableNames(initSql);
+
             long startTime = System.currentTimeMillis();
 
+            // 3. Выполняем основной SQL (эталонный или пользовательский)
             List<Map<String, Object>> rows;
-            try {
+            if (taskType == TaskType.DML) {
+                // Для DML сначала выполняем сам DML, затем делаем SELECT всех таблиц
+                executeScript(jdbc, userSql);   // выполняет UPDATE/INSERT/DELETE
+                rows = selectAllFromTables(jdbc, tableNames);
+            } else {
+                // Для DQL просто выполняем запрос
                 rows = jdbc.queryForList(userSql);
-            } catch (org.springframework.dao.DataAccessException e) {
-                long elapsed = System.currentTimeMillis() - startTime;
-                log.warn("SQL execution error for submission {}: {}", submissionId, e.getMessage());
-
-                if (e instanceof org.springframework.jdbc.BadSqlGrammarException) {
-                    return SqlExecutionResult.compilationError(e.getMessage(), elapsed);
-                }
-                return SqlExecutionResult.runtimeError(e.getMessage(), elapsed);
             }
 
             long elapsed = System.currentTimeMillis() - startTime;
@@ -82,25 +63,71 @@ public class H2ExecutionService {
             return SqlExecutionResult.success(rows, elapsed);
 
         } catch (Exception e) {
-            log.error("H2 setup error for submission {}: {}", submissionId, e.getMessage());
-            return SqlExecutionResult.runtimeError("DB init failed: " + e.getMessage(), 0);
+            log.warn("SQL execution error for submission {}: {}", submissionId, e.getMessage());
+            if (e.getMessage() != null && e.getMessage().contains("bad SQL grammar")) {
+                return SqlExecutionResult.compilationError(e.getMessage(), 0);
+            }
+            return SqlExecutionResult.runtimeError(e.getMessage(), 0);
         } finally {
-
             if (db != null) {
                 db.shutdown();
-                log.debug("H2 db {} destroyed", dbName);
             }
         }
     }
 
-
-
+    /** Выполняет init-скрипт, разбивая его по ';' */
     private void executeScript(JdbcTemplate jdbc, String sql) {
-        try (Connection conn = jdbc.getDataSource().getConnection()) {
-            ScriptUtils.executeSqlScript(conn,
-                    new ByteArrayResource(sql.getBytes(StandardCharsets.UTF_8)));
-        } catch (Exception e) {
-            throw new IllegalStateException("Init script failed: " + e.getMessage(), e);
+        String[] statements = sql.split(";");
+        for (String stmt : statements) {
+            String trimmed = stmt.trim();
+            if (trimmed.isEmpty() || trimmed.startsWith("--")) {
+                continue;
+            }
+            try {
+                jdbc.execute(trimmed);
+            } catch (Exception e) {
+                throw new IllegalStateException(
+                        "Init script failed at statement: [" + trimmed + "]: " + e.getMessage(), e);
+            }
         }
+    }
+
+    /** Извлекает имена таблиц из CREATE TABLE в init.sql */
+    private List<String> extractTableNames(String initSql) {
+        Pattern pattern = Pattern.compile("CREATE\\s+TABLE\\s+IF\\s+NOT\\s+EXISTS\\s+(\\w+)",
+                Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(initSql);
+        List<String> tables = new ArrayList<>();
+        while (matcher.find()) {
+            tables.add(matcher.group(1));
+        }
+        // Если не нашли, попробуем простой вариант "CREATE TABLE tableName"
+        if (tables.isEmpty()) {
+            Pattern simple = Pattern.compile("CREATE\\s+TABLE\\s+(\\w+)", Pattern.CASE_INSENSITIVE);
+            Matcher m = simple.matcher(initSql);
+            while (m.find()) {
+                tables.add(m.group(1));
+            }
+        }
+        return tables;
+    }
+
+    /** Выполняет SELECT * FROM для всех таблиц и объединяет результаты */
+    private List<Map<String, Object>> selectAllFromTables(JdbcTemplate jdbc, List<String> tableNames) {
+        List<Map<String, Object>> allRows = new ArrayList<>();
+        for (String table : tableNames) {
+            try {
+                List<Map<String, Object>> rows = jdbc.queryForList("SELECT * FROM " + table);
+                // Добавляем имя таблицы в каждую строку, чтобы валидатор мог различать
+                for (Map<String, Object> row : rows) {
+                    Map<String, Object> enriched = new LinkedHashMap<>(row);
+                    enriched.put("_table", table);
+                    allRows.add(enriched);
+                }
+            } catch (Exception e) {
+                log.warn("Cannot SELECT from table {}: {}", table, e.getMessage());
+            }
+        }
+        return allRows;
     }
 }

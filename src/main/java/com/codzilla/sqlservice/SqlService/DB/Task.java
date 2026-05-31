@@ -21,10 +21,6 @@ public class Task {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long taskId;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "database_id", nullable = false)
-    private DatabaseEntity database;
-
     @Column(name = "title", nullable = false)
     private String title;
 

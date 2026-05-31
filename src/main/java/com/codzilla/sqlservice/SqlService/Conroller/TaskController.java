@@ -53,12 +53,8 @@ public class TaskController {
      * Список всех задач или задач конкретной БД.
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Task>>> list(
-            @RequestParam(required = false) Long databaseId
-    ) {
-        List<Task> tasks = databaseId != null
-                ? taskService.getByDatabase(databaseId)
-                : taskService.getAll();
+    public ResponseEntity<ApiResponse<List<Task>>> list() {
+        List<Task> tasks = taskService.getAll();
         return ResponseEntity.ok(ApiResponse.ok(tasks));
     }
 

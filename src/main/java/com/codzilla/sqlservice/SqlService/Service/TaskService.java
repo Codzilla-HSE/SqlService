@@ -16,17 +16,14 @@ import java.util.List;
 public class TaskService {
 
     private final TaskRepository taskRepository;
-    private final DatabasesRepository databasesRepository;
+
     private final MinioService minioService;
 
     @Transactional
     public Task create(CreateTaskRequest req) {
-        DatabaseEntity db = databasesRepository.findById(req.databaseId())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Database not found: " + req.databaseId()));
+
 
         Task task = Task.builder()
-                .database(db)
                 .title(req.title())
                 .type(req.type())
                 .description(req.description())
@@ -67,13 +64,6 @@ public class TaskService {
         return taskRepository.findAll();
     }
 
-    @Transactional(readOnly = true)
-    public List<Task> getByDatabase(Long databaseId) {
-        DatabaseEntity db = databasesRepository.findById(databaseId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Database not found: " + databaseId));
-        return taskRepository.findAllByDatabase(db);
-    }
 
     @Transactional
     public Task update(Long taskId, UpdateTaskRequest req) {

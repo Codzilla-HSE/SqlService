@@ -541,122 +541,96 @@
 
     <!-- ── TAB: ADMIN ── -->
     <div class="tab-panel" id="tab-admin">
-        <div class="grid-2">
 
-            <!-- CREATE TASK -->
-            <div class="mac-win reveal">
-                <div class="mac-titlebar">
-                    <div class="mac-btn-wrap">
-                        <div class="mac-btn red"></div>
-                        <div class="mac-btn yel"></div>
-                        <div class="mac-btn grn"></div>
-                    </div>
-                    <div class="mac-win-title">new-task.sh — POST /sqlservice/tasks</div>
+        <!-- CREATE TASK -->
+        <div class="mac-win reveal" style="margin-bottom:2rem">
+            <div class="mac-titlebar">
+                <div class="mac-btn-wrap">
+                    <div class="mac-btn red"></div>
+                    <div class="mac-btn yel"></div>
+                    <div class="mac-btn grn"></div>
                 </div>
-                <div class="mac-content">
-                    <div class="sec-hdr">
-                        <div class="sec-hdr-inner">
-                            <div class="sec-num">05</div>
-                            <h2 class="sec-title">НОВАЯ ЗАДАЧА</h2>
-                        </div>
-                    </div>
-                    <div class="fg">
-                        <label class="fl">База данных</label>
-                        <select class="fs" id="newDbId"><option value="">— Выбрать БД —</option></select>
-                    </div>
-                    <div class="fg">
-                        <label class="fl">Название задачи</label>
-                        <input class="fi" type="text" id="newTitle" placeholder="Курьеры с рейтингом > 4.5">
-                    </div>
-                    <div class="fg">
-                        <label class="fl">Тип задачи</label>
-                        <select class="fs" id="newType">
-                            <option value="DQL">DQL — Выборка данных</option>
-                            <option value="DML">DML — Изменение данных</option>
-                        </select>
-                    </div>
-                    <div class="fg">
-                        <label class="fl">Описание</label>
-                        <textarea class="ft" id="newDesc" style="min-height:80px" placeholder="Условие задачи для пользователя..."></textarea>
-                    </div>
-                    <div class="fg">
-                        <label class="fl">Правильный SQL (correct_sql)</label>
-                        <textarea class="ft" id="newCorrectSql" placeholder="SELECT name, rating&#10;FROM couriers&#10;WHERE rating > 4.5&#10;ORDER BY rating DESC"></textarea>
-                    </div>
-                    <div style="margin-bottom:1rem">
-                        <div class="coll-hdr" onclick="toggleColl(this)">init.sql — схема + данные для H2</div>
-                        <div class="coll-body">
-                            <div style="padding-top:.8rem">
-                                <div style="font-family:var(--fm);font-size:.63rem;color:#888;margin-bottom:.4rem">Загружается в MinIO · выполняется в H2 перед каждой посылкой</div>
-                                <textarea class="ft init-sql" id="newInitSql" placeholder="CREATE TABLE couriers (&#10;  id BIGINT PRIMARY KEY AUTO_INCREMENT,&#10;  name VARCHAR(100),&#10;  rating DECIMAL(3,2)&#10;);&#10;INSERT INTO couriers VALUES (1,'Иван',4.8),(2,'Мария',4.2);"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="margin-bottom:1rem">
-                        <div class="coll-hdr" onclick="toggleColl(this)">Validator.java — кастомная проверка (опц.)</div>
-                        <div class="coll-body">
-                            <div style="padding-top:.8rem">
-                                <div style="font-family:var(--fm);font-size:.63rem;color:#888;margin-bottom:.4rem">Реализует TaskValidator · загружается в MinIO · компилируется динамически</div>
-                                <textarea class="ft val-code" id="newValidator" placeholder="public class MyValidator implements TaskValidator {&#10;  public boolean validate(List&lt;Map&lt;String,Object&gt;&gt; c,&#10;                          List&lt;Map&lt;String,Object&gt;&gt; u) {&#10;    return c.size() == u.size();&#10;  }&#10;}"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="fg">
-                        <label class="fl">Лимит времени (мс)</label>
-                        <input class="fi" type="number" id="newTl" value="10000" min="500">
-                    </div>
-                    <button class="btn btn-royal btn-full" onclick="createTask()">Создать задачу →</button>
-                </div>
+                <div class="mac-win-title">new-task.sh — POST /sqlservice/tasks</div>
             </div>
-
-            <!-- RIGHT: DB + MANAGE -->
-            <div>
-                <div class="mac-win reveal" style="margin-bottom:1.5rem">
-                    <div class="mac-titlebar">
-                        <div class="mac-btn-wrap">
-                            <div class="mac-btn red"></div>
-                            <div class="mac-btn yel"></div>
-                            <div class="mac-btn grn"></div>
-                        </div>
-                        <div class="mac-win-title">databases.sh — POST /sqlservice/databases</div>
-                    </div>
-                    <div class="mac-content">
-                        <h3 style="font-family:var(--fd);font-size:1.6rem;margin-bottom:1rem">+ БАЗА ДАННЫХ</h3>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
-                            <div class="fg"><label class="fl">Имя БД</label><input class="fi" type="text" id="dbName" placeholder="courier_db"></div>
-                            <div class="fg"><label class="fl">Схема</label><input class="fi" type="text" id="dbSchema" value="public"></div>
-                        </div>
-                        <button class="btn btn-blue btn-full" onclick="createDb()">Создать БД →</button>
+            <div class="mac-content">
+                <div class="sec-hdr">
+                    <div class="sec-hdr-inner">
+                        <div class="sec-num">05</div>
+                        <h2 class="sec-title">НОВАЯ ЗАДАЧА</h2>
                     </div>
                 </div>
 
-                <div class="mac-win reveal">
-                    <div class="mac-titlebar">
-                        <div class="mac-btn-wrap">
-                            <div class="mac-btn red"></div>
-                            <div class="mac-btn yel"></div>
-                            <div class="mac-btn grn"></div>
+                <div class="fg">
+                    <label class="fl">Название задачи</label>
+                    <input class="fi" type="text" id="newTitle" placeholder="Курьеры с рейтингом > 4.5">
+                </div>
+                <div class="fg">
+                    <label class="fl">Тип задачи</label>
+                    <select class="fs" id="newType">
+                        <option value="DQL">DQL — Выборка данных</option>
+                        <option value="DML">DML — Изменение данных</option>
+                    </select>
+                </div>
+                <div class="fg">
+                    <label class="fl">Описание</label>
+                    <textarea class="ft" id="newDesc" style="min-height:80px" placeholder="Условие задачи для пользователя..."></textarea>
+                </div>
+                <div class="fg">
+                    <label class="fl">Правильный SQL (correct_sql)</label>
+                    <textarea class="ft" id="newCorrectSql" placeholder="SELECT name, rating&#10;FROM couriers&#10;WHERE rating > 4.5&#10;ORDER BY rating DESC"></textarea>
+                </div>
+                <div style="margin-bottom:1rem">
+                    <div class="coll-hdr" onclick="toggleColl(this)">init.sql — схема + данные для H2</div>
+                    <div class="coll-body">
+                        <div style="padding-top:.8rem">
+                            <div style="font-family:var(--fm);font-size:.63rem;color:#888;margin-bottom:.4rem">Загружается в MinIO · выполняется в H2 перед каждой посылкой</div>
+                            <textarea class="ft init-sql" id="newInitSql" placeholder="CREATE TABLE couriers (&#10;  id BIGINT PRIMARY KEY AUTO_INCREMENT,&#10;  name VARCHAR(100),&#10;  rating DECIMAL(3,2)&#10;);&#10;INSERT INTO couriers VALUES (1,'Иван',4.8),(2,'Мария',4.2);"></textarea>
                         </div>
-                        <div class="mac-win-title">manage-task.sh — PATCH · DELETE /tasks/{id}</div>
                     </div>
-                    <div class="mac-content">
-                        <h3 style="font-family:var(--fd);font-size:1.6rem;margin-bottom:1rem">УПРАВЛЕНИЕ ЗАДАЧЕЙ</h3>
-                        <div class="fg"><label class="fl">ID задачи</label><input class="fi" type="number" id="mngId" placeholder="1"></div>
-                        <div class="fg"><label class="fl">Новое название (опц.)</label><input class="fi" type="text" id="mngTitle" placeholder="Не менять если пусто"></div>
-                        <div class="fg"><label class="fl">Новый лимит мс (опц.)</label><input class="fi" type="number" id="mngTl" placeholder="10000"></div>
-                        <div style="margin-bottom:1rem">
-                            <div class="coll-hdr" onclick="toggleColl(this)">Обновить init.sql в MinIO</div>
-                            <div class="coll-body">
-                                <div style="padding-top:.7rem">
-                                    <textarea class="ft init-sql" id="mngInitSql" style="min-height:100px" placeholder="-- Новый init.sql (перезапишет в MinIO)"></textarea>
-                                </div>
-                            </div>
-                        </div>
-                        <div style="display:flex;gap:.6rem">
-                            <button class="btn btn-ghost btn-sm" onclick="updateTask()" style="flex:1">Обновить ✎</button>
-                            <button class="btn btn-acc btn-sm" onclick="deleteTask()" style="flex:1">Удалить ✕</button>
+                </div>
+                <div style="margin-bottom:1rem">
+                    <div class="coll-hdr" onclick="toggleColl(this)">Validator.java — кастомная проверка (опц.)</div>
+                    <div class="coll-body">
+                        <div style="padding-top:.8rem">
+                            <div style="font-family:var(--fm);font-size:.63rem;color:#888;margin-bottom:.4rem">Реализует TaskValidator · загружается в MinIO · компилируется динамически</div>
+                            <textarea class="ft val-code" id="newValidator" placeholder="public class MyValidator implements TaskValidator {&#10;  public boolean validate(List&lt;Map&lt;String,Object&gt;&gt; c,&#10;                          List&lt;Map&lt;String,Object&gt;&gt; u) {&#10;    return c.size() == u.size();&#10;  }&#10;}"></textarea>
                         </div>
                     </div>
+                </div>
+                <div class="fg">
+                    <label class="fl">Лимит времени (мс)</label>
+                    <input class="fi" type="number" id="newTl" value="10000" min="500">
+                </div>
+                <button class="btn btn-royal btn-full" onclick="createTask()">Создать задачу →</button>
+            </div>
+        </div>
+
+        <!-- MANAGE TASK -->
+        <div class="mac-win reveal">
+            <div class="mac-titlebar">
+                <div class="mac-btn-wrap">
+                    <div class="mac-btn red"></div>
+                    <div class="mac-btn yel"></div>
+                    <div class="mac-btn grn"></div>
+                </div>
+                <div class="mac-win-title">manage-task.sh — PATCH · DELETE /tasks/{id}</div>
+            </div>
+            <div class="mac-content">
+                <h3 style="font-family:var(--fd);font-size:1.6rem;margin-bottom:1rem">УПРАВЛЕНИЕ ЗАДАЧЕЙ</h3>
+                <div class="fg"><label class="fl">ID задачи</label><input class="fi" type="number" id="mngId" placeholder="1"></div>
+                <div class="fg"><label class="fl">Новое название (опц.)</label><input class="fi" type="text" id="mngTitle" placeholder="Не менять если пусто"></div>
+                <div class="fg"><label class="fl">Новый лимит мс (опц.)</label><input class="fi" type="number" id="mngTl" placeholder="10000"></div>
+                <div style="margin-bottom:1rem">
+                    <div class="coll-hdr" onclick="toggleColl(this)">Обновить init.sql в MinIO</div>
+                    <div class="coll-body">
+                        <div style="padding-top:.7rem">
+                            <textarea class="ft init-sql" id="mngInitSql" style="min-height:100px" placeholder="-- Новый init.sql (перезапишет в MinIO)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:.6rem">
+                    <button class="btn btn-ghost btn-sm" onclick="updateTask()" style="flex:1">Обновить ✎</button>
+                    <button class="btn btn-acc btn-sm" onclick="deleteTask()" style="flex:1">Удалить ✕</button>
                 </div>
             </div>
         </div>
@@ -678,7 +652,6 @@
         <div class="mac-content" id="modalTaskBody"></div>
     </div>
 </div>
-
 <script>
     // ═══════════════════════════════ STATE ═══════════════════════════════
     let allTasks=[], lbData=[], lbFilter='ALL';
@@ -856,22 +829,6 @@
         <button class="btn btn-royal btn-full" onclick="closeModal('modalTask');selectTask(${t.taskId})">Решить эту задачу →</button>
       `;
       openModal('modalTask');
-    }
-
-    // ═══════════════════════════════ DATABASES ════════════════════════════
-    async function loadDatabases(){
-      const res=await apiGet('/databases');
-      if(!res)return;
-      const dbs=res.data||[];
-      const opts=dbs.map(d=>`<option value="${d.id}">${d.name}</option>`).join('');
-      document.getElementById('newDbId').innerHTML='<option value="">— Выбрать БД —</option>'+opts;
-    }
-    async function createDb(){
-      const name=document.getElementById('dbName').value.trim();
-      const schema=document.getElementById('dbSchema').value.trim();
-      if(!name||!schema){toast('Заполни имя и схему','err');return;}
-      const res=await apiPost('/databases',{name,schemaName:schema});
-      if(res){toast(`БД "${res.name}" создана!`,'ok');document.getElementById('dbName').value='';await loadDatabases();}
     }
 
     // ═══════════════════════════════ PIPELINE ════════════════════════════
@@ -1054,7 +1011,6 @@
     // ═══════════════════════════════ ADMIN ═══════════════════════════════
     async function createTask(){
       const body={
-        databaseId:+document.getElementById('newDbId').value,
         title:document.getElementById('newTitle').value.trim(),
         type:document.getElementById('newType').value,
         description:document.getElementById('newDesc').value.trim(),
@@ -1063,7 +1019,7 @@
         validatorJavaCode:document.getElementById('newValidator').value.trim()||null,
         timeLimitMs:+document.getElementById('newTl').value||10000,
       };
-      if(!body.databaseId||!body.title||!body.correctSqlQuery){toast('БД, название и SQL обязательны','err');return;}
+      if(!body.title||!body.correctSqlQuery){toast('Название и правильный SQL обязательны','err');return;}
       const res=await apiPost('/tasks',body);
       if(res){
         toast(`Задача "${res.title}" создана! ID:${res.taskId}`,'ok');
@@ -1104,7 +1060,7 @@
 
     // ═══════════════════════════════ INIT ════════════════════════════════
     async function init(){
-      await Promise.all([loadDatabases(),loadTasks(),loadStats()]);
+      await Promise.all([loadTasks(),loadStats()]);
     }
     init();
 </script>

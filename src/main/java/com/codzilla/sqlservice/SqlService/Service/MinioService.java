@@ -1,8 +1,7 @@
 package com.codzilla.sqlservice.SqlService.Service;
 
-import io.minio.GetObjectArgs;
-import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
+import io.minio.*;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +27,30 @@ public class MinioService {
 
     @Value("${minio.bucket}")
     private String bucket;
+
+    /**
+     * Проверяет и создаёт бакет при необходимости.
+     * Вызывается один раз при старте приложения.
+     */
+    @PostConstruct
+    public void ensureBucketExists() {
+        try {
+            boolean found = minioClient.bucketExists(
+                    BucketExistsArgs.builder().bucket(bucket).build()
+            );
+            if (!found) {
+                minioClient.makeBucket(
+                        MakeBucketArgs.builder().bucket(bucket).build()
+                );
+                log.info("Bucket '{}' created successfully", bucket);
+            } else {
+                log.info("Bucket '{}' already exists", bucket);
+            }
+        } catch (Exception e) {
+            log.error("Cannot ensure bucket '{}': {}", bucket, e.getMessage());
+            throw new IllegalStateException("MinIO bucket initialization failed", e);
+        }
+    }
 
     /**
      * Скачать файл из MinIO как строку.
