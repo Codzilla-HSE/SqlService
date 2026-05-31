@@ -10,9 +10,7 @@ public record CreateTaskRequest(
         @NotNull  TaskType type,
         String   description,
         @NotBlank String   correctSqlQuery,
-        // init.sql — создаёт таблицы и данные для задачи
         String   initSql,
-        // Java-код валидатора (опционально)
         String   validatorJavaCode,
         @Positive Integer timeLimitMs
 ) {}

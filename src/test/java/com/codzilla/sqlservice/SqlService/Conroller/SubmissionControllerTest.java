@@ -57,13 +57,13 @@ class SubmissionControllerTest {
 
     @Test
     void submit_invalidRequest_shouldReturnBadRequest() throws Exception {
-        // Отправляем некорректный запрос (отсутствует taskId)
+
         String invalidJson = "{\"userId\":\"some-uuid\"}";
 
         mockMvc.perform(post("/sqlservice/submissions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidJson))
-                .andExpect(status().isInternalServerError());  // пока нет обработчика валидации
+                .andExpect(status().isInternalServerError());
     }
 
     @Test
@@ -71,13 +71,13 @@ class SubmissionControllerTest {
         given(submissionService.getStatus(99L)).willThrow(new IllegalArgumentException("Submission not found: 99"));
 
         mockMvc.perform(get("/sqlservice/submissions/99"))
-                .andExpect(status().isNotFound());   // теперь работает
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void leaderboard_missingTaskId_shouldReturnBadRequest() throws Exception {
         mockMvc.perform(get("/sqlservice/submissions/leaderboard"))
-                .andExpect(status().isBadRequest());   // ← теперь правильно
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -154,7 +154,7 @@ class SubmissionControllerTest {
         mockMvc.perform(get("/sqlservice/submissions/leaderboard").param("taskId", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.length()").value(2))
-                .andExpect(jsonPath("$.data[0].submissionId").value(11))  // сначала с меньшим offset'ом
+                .andExpect(jsonPath("$.data[0].submissionId").value(11))
                 .andExpect(jsonPath("$.data[1].submissionId").value(10));
     }
 

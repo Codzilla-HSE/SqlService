@@ -45,12 +45,10 @@ class H2ExecutionServiceTest {
         assertEquals(2, result.rows().size());
 
         List<String> names = result.rows().stream()
-                .map(r -> (String) r.get("name"))   // строчные буквы
+                .map(r -> (String) r.get("name"))
                 .toList();
         assertTrue(names.contains("Alice"));
         assertTrue(names.contains("Bob"));
-
-        // Убедимся, что поле _table не добавляется для DQL
         assertFalse(result.rows().get(0).containsKey("_table"));
     }
 
@@ -61,7 +59,7 @@ class H2ExecutionServiceTest {
 
         assertTrue(result.success());
         assertEquals(1, result.rows().size());
-        assertEquals("Maria", result.rows().get(0).get("name"));   // строчные
+        assertEquals("Maria", result.rows().get(0).get("name"));
     }
 
     @Test
@@ -73,10 +71,10 @@ class H2ExecutionServiceTest {
         assertTrue(result.success());
         assertEquals(2, result.rows().size());
 
-        // Все строки должны иметь name = 'Eve'
+
         assertTrue(result.rows().stream().allMatch(r -> "Eve".equals(r.get("name"))));
 
-        // Должно присутствовать поле _table
+
         assertTrue(result.rows().get(0).containsKey("_table"));
         assertEquals("employees", result.rows().get(0).get("_table"));
     }
@@ -90,7 +88,7 @@ class H2ExecutionServiceTest {
         assertTrue(result.success());
         assertEquals(3, result.rows().size());
         List<String> names = result.rows().stream()
-                .map(r -> (String) r.get("name"))   // строчные
+                .map(r -> (String) r.get("name"))
                 .toList();
         assertTrue(names.contains("Alex"));
     }
@@ -103,7 +101,7 @@ class H2ExecutionServiceTest {
 
         assertTrue(result.success());
         assertEquals(1, result.rows().size());
-        assertEquals("Ivan", result.rows().get(0).get("name"));   // строчные
+        assertEquals("Ivan", result.rows().get(0).get("name"));
     }
 
     @Test

@@ -18,7 +18,7 @@ class SqlSecurityValidatorTest {
         validator = new SqlSecurityValidator();
     }
 
-    // ───────────────────────────── НОРМАЛИЗАЦИЯ ─────────────────────────────
+
 
     @Test
     void normalize_removesSingleLineComments() {
@@ -49,8 +49,6 @@ class SqlSecurityValidatorTest {
         String sql = "SELECT * FROM users;;;";
         assertThat(validator.normalize(sql)).isEqualTo("SELECT * FROM users");
     }
-
-    // ─────────────────────── ВАЛИДАЦИЯ ПОЛЬЗОВАТЕЛЬСКОГО SQL ─────────────────
 
     @Test
     void validateUserSql_nullOrEmpty_returnsCompilationError() {
@@ -91,8 +89,6 @@ class SqlSecurityValidatorTest {
     })
 
     void validateUserSql_forbiddenPatterns_returnsSecurityViolation(String maliciousSql) {
-        // Все эти запросы являются SELECT-запросами только по совпадению (для DQL проверка типа позже)
-        // Проверяем на DQL, чтобы не мешала валидация по типу.
         var result = validator.validateUserSql(maliciousSql, TaskType.DQL);
         assertThat(result.valid()).isFalse();
         assertThat(result.failVerdict()).isEqualTo(SqlVerdict.SECURITY_VIOLATION);
@@ -151,7 +147,7 @@ class SqlSecurityValidatorTest {
         assertThat(result.failVerdict()).isEqualTo(SqlVerdict.SECURITY_VIOLATION);
     }
 
-    // ─────────────────────── ВАЛИДАЦИЯ ADMIN SQL ────────────────────────────
+
 
     @Test
     void validateAdminSql_nullOrEmpty_returnsCompilationError() {
@@ -169,7 +165,7 @@ class SqlSecurityValidatorTest {
 
     @Test
     void validateAdminSql_allowsDmlAndDdl() {
-        // Составитель может использовать DML и DDL в correct_sql
+
         assertThat(validator.validateAdminSql("UPDATE users SET name='A'").valid()).isTrue();
         assertThat(validator.validateAdminSql("CREATE TABLE test(id INT)").valid()).isTrue();
     }

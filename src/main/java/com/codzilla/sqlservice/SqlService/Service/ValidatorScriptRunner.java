@@ -14,41 +14,22 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Динамически компилирует и запускает Java-валидатор из MinIO.
- *
- * Поток:
- *   1. Получить Java-код валидатора как строку (из MinIO)
- *   2. Скомпилировать в памяти через javax.tools.JavaCompiler
- *   3. Загрузить класс через URLClassLoader
- *   4. Создать экземпляр и вызвать validate()
- *   5. Удалить временные файлы
- */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ValidatorScriptRunner {
 
-    /**
-     * Запустить валидатор.
-     *
-     * @param validatorJavaCode исходный код Java-класса (скачан из MinIO)
-     * @param correctRows       результат правильного запроса
-     * @param userRows          результат запроса пользователя
-     * @return результат валидации
-     */
     public ValidationResult run(String validatorJavaCode,
                                 List<Map<String, Object>> correctRows,
                                 List<Map<String, Object>> userRows) {
         Path tempDir = null;
         try {
-            // 1. Создать temp-директорию для компиляции
             tempDir = Files.createTempDirectory("sql-validator-");
             String className = extractClassName(validatorJavaCode);
             Path javaFile = tempDir.resolve(className + ".java");
             Files.writeString(javaFile, validatorJavaCode);
 
-            // 2. Скомпилировать
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
             if (compiler == null) {
                 throw new IllegalStateException("JavaCompiler not available (JDK required, not JRE)");
@@ -71,7 +52,6 @@ public class ValidatorScriptRunner {
                 }
             }
 
-            // 3. Загрузить класс
             URLClassLoader classLoader = URLClassLoader.newInstance(
                     new java.net.URL[]{tempDir.toUri().toURL()},
                     Thread.currentThread().getContextClassLoader()
@@ -82,7 +62,6 @@ public class ValidatorScriptRunner {
                     .getDeclaredConstructor()
                     .newInstance();
 
-            // 4. Запустить валидацию
             boolean accepted = validator.validate(correctRows, userRows);
             String message = accepted ? null : validator.failMessage(correctRows, userRows);
 
@@ -94,7 +73,6 @@ public class ValidatorScriptRunner {
             log.error("Validator execution error: {}", e.getMessage());
             return ValidationResult.error("Validator error: " + e.getMessage());
         } finally {
-            // 5. Очистить temp файлы
             if (tempDir != null) {
                 deleteDir(tempDir.toFile());
             }

@@ -44,8 +44,8 @@ class TaskServiceTest {
                 .validatorScriptKey(null)
                 .build();
 
-        // Правильный порядок аргументов:
-        // title, type, description, correctSqlQuery, initSql, validatorJavaCode, timeLimitMs
+
+
         createRequest = new CreateTaskRequest(
                 "New task", TaskType.DQL, "new desc", "SELECT 1",
                 "init sql content", "validator java code", 5000
@@ -61,7 +61,7 @@ class TaskServiceTest {
         given(taskRepository.save(any(Task.class))).willAnswer(inv -> {
             Task t = inv.getArgument(0);
             if (t.getTaskId() == null) {
-                t.setTaskId(1L);  // имитация генерации ID
+                t.setTaskId(1L);
             }
             return t;
         });
@@ -80,7 +80,7 @@ class TaskServiceTest {
     void create_withoutInitAndValidator_doesNotUpload() {
         CreateTaskRequest req = new CreateTaskRequest(
                 "Task", TaskType.DML, "desc", "UPDATE users SET x=1",
-                null, null, 3000   // initSql=null, validatorJavaCode=null, timeLimitMs=3000
+                null, null, 3000
         );
 
         given(taskRepository.save(any(Task.class))).willAnswer(inv -> {
@@ -101,7 +101,7 @@ class TaskServiceTest {
     void create_withDefaultTimeLimitIfNull() {
         CreateTaskRequest req = new CreateTaskRequest(
                 "Task", TaskType.DQL, "desc", "SELECT 1",
-                null, null, null   // timeLimitMs=null → дефолт 30_000
+                null, null, null
         );
 
         given(taskRepository.save(any(Task.class))).willAnswer(inv -> {
@@ -145,7 +145,7 @@ class TaskServiceTest {
         given(taskRepository.findById(1L)).willReturn(Optional.of(existingTask));
         given(taskRepository.save(any(Task.class))).willReturn(existingTask);
 
-        // title, type, description, correctSqlQuery, initSql, validatorJavaCode, timeLimitMs
+
         UpdateTaskRequest req = new UpdateTaskRequest(
                 "Updated", TaskType.DML, "new desc", "DELETE FROM x",
                 "new init", "new validator", 15000
@@ -165,11 +165,11 @@ class TaskServiceTest {
         given(taskRepository.findById(1L)).willReturn(Optional.of(existingTask));
         given(taskRepository.save(any(Task.class))).willReturn(existingTask);
 
-        // Передаём только title, остальное null
+
         Task updated = taskService.update(1L, updateRequest);
 
         assertThat(updated.getTitle()).isEqualTo("Updated title");
-        assertThat(updated.getType()).isEqualTo(TaskType.DQL); // не изменилось
+        assertThat(updated.getType()).isEqualTo(TaskType.DQL);
         then(minioService).should(never()).uploadString(anyString(), anyString());
     }
 

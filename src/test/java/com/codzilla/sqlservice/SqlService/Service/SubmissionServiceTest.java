@@ -42,7 +42,7 @@ class SubmissionServiceTest {
                 .taskId(1L).type(TaskType.DQL).correctSqlResponse("SELECT * FROM users")
                 .initScriptKey("tasks/1/init.sql").timeLimitMs(5000).build();
 
-        // Нормализация может не вызываться в тестах с ошибкой валидации – делаем lenient
+
         lenient().when(securityValidator.normalize(anyString())).thenReturn(normalizedSql);
     }
 
@@ -53,15 +53,15 @@ class SubmissionServiceTest {
     @Test
     void submit_validRequest_returnsSubmissionIdAndSavesPending() {
         mockTaskFound();
-        // Успешная валидация
+
         given(securityValidator.validateUserSql(anyString(), eq(TaskType.DQL)))
                 .willReturn(new SqlSecurityValidator.ValidationResult(true, null, null));
 
-        // Имитация успешной отправки в Kafka
+
         given(kafkaTemplate.send(eq(KafkaConfig.SUBMISSION_TOPIC), eq("1"), any()))
                 .willReturn(CompletableFuture.completedFuture(null));
 
-        // При сохранении возвращаем объект с присвоенным ID
+
         given(submissionRepository.save(any(SqlSubmission.class))).willAnswer(inv -> {
             SqlSubmission s = inv.getArgument(0);
             s.setSubmissionId(100L);
@@ -72,7 +72,7 @@ class SubmissionServiceTest {
 
         assertThat(id).isEqualTo(100L);
 
-        // Проверяем, что сохранили посылку в статусе PENDING
+
         ArgumentCaptor<SqlSubmission> captor = ArgumentCaptor.forClass(SqlSubmission.class);
         then(submissionRepository).should().save(captor.capture());
         SqlSubmission saved = captor.getValue();
@@ -81,14 +81,14 @@ class SubmissionServiceTest {
         assertThat(saved.getUserId()).isEqualTo(userId);
         assertThat(saved.getTask()).isEqualTo(dqlTask);
 
-        // Проверяем, что сообщение отправили в Kafka
+
         then(kafkaTemplate).should().send(eq(KafkaConfig.SUBMISSION_TOPIC), eq("1"), any(SubmissionKafkaMessage.class));
     }
 
     @Test
     void submit_invalidSql_throwsIllegalArgumentException() {
         mockTaskFound();
-        // Валидация не проходит для любого SQL
+
         given(securityValidator.validateUserSql(anyString(), eq(TaskType.DQL)))
                 .willReturn(new SqlSecurityValidator.ValidationResult(false, SqlVerdict.SECURITY_VIOLATION, "blocked"));
 
@@ -97,7 +97,7 @@ class SubmissionServiceTest {
                 .hasMessageContaining("SECURITY_VIOLATION")
                 .hasMessageContaining("blocked");
 
-        // Сохранение не должно вызываться
+
         then(submissionRepository).should(never()).save(any());
         then(kafkaTemplate).should(never()).send(anyString(), anyString(), any());
     }
@@ -139,17 +139,17 @@ class SubmissionServiceTest {
     @Test
     void submit_kafkaFailure_updatesSubmissionToError() {
         mockTaskFound();
-        // Успешная валидация
+
         given(securityValidator.validateUserSql(anyString(), eq(TaskType.DQL)))
                 .willReturn(new SqlSecurityValidator.ValidationResult(true, null, null));
 
-        // Имитация ошибки Kafka
+
         CompletableFuture<SendResult<String, SubmissionKafkaMessage>> failedFuture =
                 CompletableFuture.failedFuture(new RuntimeException("Kafka down"));
         given(kafkaTemplate.send(eq(KafkaConfig.SUBMISSION_TOPIC), eq("1"), any()))
                 .willReturn(failedFuture);
 
-        // Сохраняем посылку, запоминаем её
+
         SqlSubmission[] savedHolder = new SqlSubmission[1];
         given(submissionRepository.save(any(SqlSubmission.class))).willAnswer(inv -> {
             SqlSubmission s = inv.getArgument(0);
@@ -158,13 +158,13 @@ class SubmissionServiceTest {
             return s;
         });
 
-        // Для markKafkaFailure нужно, чтобы findById вернул ту же посылку
+
         given(submissionRepository.findById(200L)).willAnswer(inv -> Optional.ofNullable(savedHolder[0]));
 
         Long id = submissionService.submit(1L, userId, rawSql);
         assertThat(id).isEqualTo(200L);
 
-        // Проверяем, что статус изменился на ERROR
+
         ArgumentCaptor<SqlSubmission> captor = ArgumentCaptor.forClass(SqlSubmission.class);
         then(submissionRepository).should(atLeastOnce()).save(captor.capture());
         SqlSubmission updated = captor.getValue();

@@ -16,13 +16,10 @@ import java.util.List;
 public class TaskService {
 
     private final TaskRepository taskRepository;
-
     private final MinioService minioService;
 
     @Transactional
     public Task create(CreateTaskRequest req) {
-
-
         Task task = Task.builder()
                 .title(req.title())
                 .type(req.type())

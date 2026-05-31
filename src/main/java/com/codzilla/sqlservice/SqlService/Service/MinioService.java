@@ -28,10 +28,6 @@ public class MinioService {
     @Value("${minio.bucket}")
     private String bucket;
 
-    /**
-     * Проверяет и создаёт бакет при необходимости.
-     * Вызывается один раз при старте приложения.
-     */
     @PostConstruct
     public void ensureBucketExists() {
         try {
@@ -52,10 +48,6 @@ public class MinioService {
         }
     }
 
-    /**
-     * Скачать файл из MinIO как строку.
-     * @param key путь вида "tasks/1/init.sql"
-     */
     public String downloadAsString(String key) {
         try {
             InputStream stream = minioClient.getObject(
@@ -72,10 +64,6 @@ public class MinioService {
         }
     }
 
-    /**
-     * Загрузить текстовый файл в MinIO.
-     * Используется при создании задачи (через UI/API).
-     */
     public void uploadString(String key, String content) {
         try {
             byte[] bytes = content.getBytes(StandardCharsets.UTF_8);

@@ -34,22 +34,16 @@ public class H2ExecutionService {
 
             JdbcTemplate jdbc = new JdbcTemplate(db);
 
-            // 1. Выполняем init-скрипт (создание таблиц, наполнение)
             executeScript(jdbc, initSql);
 
-            // 2. Извлекаем имена таблиц, созданных в init.sql
             List<String> tableNames = extractTableNames(initSql);
 
             long startTime = System.currentTimeMillis();
 
-            // 3. Выполняем основной SQL (эталонный или пользовательский)
             List<Map<String, Object>> rows;
             if (taskType == TaskType.DML) {
-                // Для DML сначала выполняем сам DML, затем делаем SELECT всех таблиц
-                executeScript(jdbc, userSql);   // выполняет UPDATE/INSERT/DELETE
                 rows = selectAllFromTables(jdbc, tableNames);
             } else {
-                // Для DQL просто выполняем запрос
                 rows = jdbc.queryForList(userSql);
             }
 
@@ -81,11 +75,9 @@ public class H2ExecutionService {
         StringBuilder currentStatement = new StringBuilder();
         for (String line : lines) {
             String trimmed = line.trim();
-            // Пропускаем пустые строки и строки-комментарии
             if (trimmed.isEmpty() || trimmed.startsWith("--")) {
                 continue;
             }
-            // Если строка заканчивается на ';', это конец оператора
             if (trimmed.endsWith(";")) {
                 currentStatement.append(trimmed, 0, trimmed.length() - 1);
                 String stmt = currentStatement.toString().trim();
@@ -102,7 +94,6 @@ public class H2ExecutionService {
                 currentStatement.append(trimmed).append(" ");
             }
         }
-        // Выполняем оставшийся оператор (если нет ';' в конце)
         String remaining = currentStatement.toString().trim();
         if (!remaining.isEmpty()) {
             try {
@@ -122,7 +113,6 @@ public class H2ExecutionService {
         while (matcher.find()) {
             tables.add(matcher.group(1));
         }
-        // Если не нашли, попробуем простой вариант "CREATE TABLE tableName"
         if (tables.isEmpty()) {
             Pattern simple = Pattern.compile("CREATE\\s+TABLE\\s+(\\w+)", Pattern.CASE_INSENSITIVE);
             Matcher m = simple.matcher(initSql);
@@ -139,7 +129,6 @@ public class H2ExecutionService {
         for (String table : tableNames) {
             try {
                 List<Map<String, Object>> rows = jdbc.queryForList("SELECT * FROM " + table);
-                // Добавляем имя таблицы в каждую строку, чтобы валидатор мог различать
                 for (Map<String, Object> row : rows) {
                     Map<String, Object> enriched = new LinkedHashMap<>(row);
                     enriched.put("_table", table);

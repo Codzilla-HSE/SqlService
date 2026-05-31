@@ -2,10 +2,7 @@ package com.codzilla.sqlservice.SqlService.Dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-/**
- * Единая обёртка всех ответов API.
- * data = null при ошибке, error = null при успехе.
- */
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ApiResponse<T>(
         boolean success,

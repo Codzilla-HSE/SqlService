@@ -41,7 +41,7 @@ class TaskControllerTest {
         taskService = mock(TaskService.class);
         TaskController controller = new TaskController(taskService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
-                .setControllerAdvice(new GlobalExceptionHandler()) // обработчик ошибок
+                .setControllerAdvice(new GlobalExceptionHandler()) 
                 .build();
         objectMapper = new ObjectMapper();
     }
@@ -116,7 +116,7 @@ class TaskControllerTest {
         given(taskService.getById(99L)).willThrow(new IllegalArgumentException("Task not found: 99"));
 
         mockMvc.perform(get("/sqlservice/tasks/99"))
-                .andExpect(status().isNotFound());   // ← меняем обратно
+                .andExpect(status().isNotFound());   
     }
 
     @Test

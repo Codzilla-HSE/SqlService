@@ -88,7 +88,7 @@ public class SubmissionKafkaConsumer {
 
         int timeLimit = task.getTimeLimitMs() != null ? task.getTimeLimitMs() : 30_000;
 
-        // ── Нормализация и проверка безопасности ──────────────────────────
+
         String normalizedUserSql = securityValidator.normalize(message.userSqlQuery());
 
         SqlSecurityValidator.ValidationResult secCheck =
@@ -102,7 +102,7 @@ public class SubmissionKafkaConsumer {
             return;
         }
 
-        // ── Проверка соответствия типа SQL типу задачи ─────────────────────
+
         String upperSql = normalizedUserSql.trim().toUpperCase();
         boolean isSelect = upperSql.startsWith("SELECT");
         boolean isDml = upperSql.startsWith("INSERT") || upperSql.startsWith("UPDATE") ||
@@ -123,7 +123,7 @@ public class SubmissionKafkaConsumer {
             return;
         }
 
-        // ── Проверка correct_sql от составителя ────────────────────────────
+
         String normalizedCorrectSql = securityValidator.normalize(task.getCorrectSqlResponse());
         SqlSecurityValidator.ValidationResult adminCheck =
                 securityValidator.validateAdminSql(normalizedCorrectSql);
@@ -136,7 +136,7 @@ public class SubmissionKafkaConsumer {
             return;
         }
 
-        // ── Загрузка init.sql ──────────────────────────────────────────────
+
         String initSql;
         try {
             initSql = loadInitScript(task);
@@ -148,7 +148,7 @@ public class SubmissionKafkaConsumer {
             return;
         }
 
-        // ── Выполнение correct_sql (эталон) ────────────────────────────────
+
         SqlExecutionResult correctResult = h2ExecutionService.executeInIsolation(
                 -(message.submissionId()), initSql, normalizedCorrectSql, timeLimit, task.getType());
 
@@ -161,7 +161,7 @@ public class SubmissionKafkaConsumer {
             return;
         }
 
-        // ── Выполнение user_sql ────────────────────────────────────────────
+
         SqlExecutionResult userResult = h2ExecutionService.executeInIsolation(
                 message.submissionId(), initSql, normalizedUserSql, timeLimit, task.getType());
 
@@ -173,7 +173,7 @@ public class SubmissionKafkaConsumer {
             return;
         }
 
-        // ── Валидация результата ───────────────────────────────────────────
+
         ValidatorScriptRunner.ValidationResult validation;
         try {
             validation = runValidation(task, correctResult.rows(), userResult.rows());
@@ -199,7 +199,7 @@ public class SubmissionKafkaConsumer {
         ack.acknowledge();
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
+
 
     private void finalize(SqlSubmission s, SubmissionStatus status, SqlVerdict verdict,
                           boolean rowsMatched, Long execTime, String errorMessage) {
@@ -227,7 +227,7 @@ public class SubmissionKafkaConsumer {
             return validatorRunner.run(code, correctRows, userRows);
         }
 
-        // Дефолтное сравнение
+
         List<String> c = correctRows.stream().map(Map::toString).sorted().toList();
         List<String> u = userRows.stream().map(Map::toString).sorted().toList();
         boolean match = c.equals(u);

@@ -22,7 +22,6 @@ class MinioServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Устанавливаем значение bucket, которое обычно приходит из application.properties
         ReflectionTestUtils.setField(minioService, "bucket", "test-bucket");
     }
 
@@ -62,7 +61,6 @@ class MinioServiceTest {
 
     @Test
     void downloadAsString_success() throws Exception {
-        // GetObjectResponse реализует InputStream, поэтому замокаем его и зададим readAllBytes()
         GetObjectResponse response = mock(GetObjectResponse.class);
         given(response.readAllBytes()).willReturn("CONTENT".getBytes());
         given(minioClient.getObject(any(GetObjectArgs.class))).willReturn(response);

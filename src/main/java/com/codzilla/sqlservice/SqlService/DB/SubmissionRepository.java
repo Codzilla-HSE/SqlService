@@ -18,12 +18,6 @@ public interface SubmissionRepository extends JpaRepository<SqlSubmission, Long>
 
     List<SqlSubmission> findByStatus(SubmissionStatus status);
 
-    /**
-     * Лидерборд по задаче:
-     * 1. ACCEPTED сначала
-     * 2. Внутри ACCEPTED — по kafka_offset (кто раньше отправил)
-     * 3. Остальные — по времени создания
-     */
     @Query("""
         SELECT s FROM SqlSubmission s
         WHERE s.task.taskId = :taskId

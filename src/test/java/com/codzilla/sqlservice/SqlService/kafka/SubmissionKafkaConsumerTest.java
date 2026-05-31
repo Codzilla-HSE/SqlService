@@ -62,12 +62,10 @@ class SubmissionKafkaConsumerTest {
                 .taskId(2L).type(TaskType.DML).correctSqlResponse("UPDATE users SET name='Eve'")
                 .initScriptKey("tasks/2/init.sql").timeLimitMs(5000).build();
 
-        // Разрешаем любые SQL-запросы в тестах (без проверок безопасности)
         given(securityValidator.normalize(anyString())).willAnswer(inv -> inv.getArgument(0));
         given(securityValidator.validateUserSql(anyString(), any()))
                 .willReturn(new SqlSecurityValidator.ValidationResult(true, null, null));
 
-        // validateAdminSql может не вызываться в некоторых тестах – делаем lenient
         lenient().when(securityValidator.validateAdminSql(anyString()))
                 .thenReturn(new SqlSecurityValidator.ValidationResult(true, null, null));
     }
@@ -214,8 +212,6 @@ class SubmissionKafkaConsumerTest {
 
         given(submissionRepository.findById(7L)).willReturn(Optional.of(sub));
         given(taskRepository.findById(1L)).willReturn(Optional.of(dqlTask));
-        // стаб minioService здесь не нужен – запрос будет отвергнут по типу раньше
-
         consumer.consume(new ConsumerRecord<>("sql.submissions", 0, 0L, "key", message), ack);
 
         ArgumentCaptor<SqlSubmission> captor = ArgumentCaptor.forClass(SqlSubmission.class);
@@ -227,11 +223,10 @@ class SubmissionKafkaConsumerTest {
     }
     @Test
     void shouldSetWrongAnswerIfValidatorFails() {
-        // Создаём задачу с валидатором, чтобы consumer вызвал его
         Task taskWithValidator = Task.builder()
                 .taskId(4L).type(TaskType.DQL).correctSqlResponse("SELECT * FROM users")
                 .initScriptKey("tasks/4/init.sql")
-                .validatorScriptKey("tasks/4/Validator.java")  // ← ключ валидатора
+                .validatorScriptKey("tasks/4/Validator.java")
                 .timeLimitMs(5000).build();
 
         SqlSubmission sub = submission(8L, taskWithValidator, "SELECT * FROM users");
@@ -239,11 +234,8 @@ class SubmissionKafkaConsumerTest {
 
         given(submissionRepository.findById(8L)).willReturn(Optional.of(sub));
         given(taskRepository.findById(4L)).willReturn(Optional.of(taskWithValidator));
-        // init-скрипт тот же
         given(minioService.downloadAsString("tasks/4/init.sql")).willReturn(initSql);
-        // При загрузке валидатора возвращаем любой код (он не выполняется, т.к. validatorRunner замокан)
         given(minioService.downloadAsString("tasks/4/Validator.java")).willReturn("// mock code");
-        // Мокаем валидатор – он возвращает неуспех
         given(validatorRunner.run(anyString(), anyList(), anyList()))
                 .willReturn(new ValidatorScriptRunner.ValidationResult(false, "Names differ", null));
 

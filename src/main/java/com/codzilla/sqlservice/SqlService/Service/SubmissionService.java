@@ -24,41 +24,35 @@ public class SubmissionService {
     private final SubmissionRepository submissionRepository;
     private final TaskRepository taskRepository;
     private final KafkaTemplate<String, SubmissionKafkaMessage> kafkaTemplate;
-    private final SqlSecurityValidator securityValidator; // ← добавлено
+    private final SqlSecurityValidator securityValidator;
 
     @Transactional
     public Long submit(Long taskId, UUID userId, String userSqlQuery) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("Task not found: " + taskId));
 
-        // ── Ранняя валидация до сохранения в БД ─────────────────────────────
-        // Нормализуем сразу — сохраняем нормализованный запрос
         String normalizedSql = securityValidator.normalize(userSqlQuery);
 
         SqlSecurityValidator.ValidationResult check =
                 securityValidator.validateUserSql(normalizedSql, task.getType());
 
         if (!check.valid()) {
-            // Бросаем исключение — GlobalExceptionHandler вернёт 400
-            // Посылка вообще не создаётся в БД
             throw new IllegalArgumentException(
                     check.failVerdict() + ": " + check.message());
         }
 
-        // ── Создаём посылку ──────────────────────────────────────────────────
         SqlSubmission submission = SqlSubmission.builder()
                 .task(task)
                 .userId(userId)
-                .userSqlQuery(normalizedSql)   // сохраняем нормализованный
+                .userSqlQuery(normalizedSql)
                 .status(SubmissionStatus.PENDING)
-                .verdict(SqlVerdict.SYSTEM_ERROR) // placeholder
+                .verdict(SqlVerdict.SYSTEM_ERROR)
                 .build();
 
         SqlSubmission saved = submissionRepository.save(submission);
         Long submissionId = saved.getSubmissionId();
         log.info("Submission {} saved for task {} by user {}", submissionId, taskId, userId);
 
-        // ── Отправляем в Kafka ───────────────────────────────────────────────
         SubmissionKafkaMessage message = new SubmissionKafkaMessage(
                 submissionId, taskId, userId, normalizedSql);
 
@@ -68,7 +62,7 @@ public class SubmissionService {
         future.whenComplete((result, ex) -> {
             if (ex != null) {
                 log.error("Failed to send submission {} to Kafka", submissionId, ex);
-                // Kafka упала — немедленно ставим ERROR чтобы не зависнуть в PENDING
+
                 markKafkaFailure(submissionId, ex.getMessage());
             } else {
                 log.debug("Submission {} → partition={} offset={}",
@@ -91,7 +85,6 @@ public class SubmissionService {
                 s.getExecutionTimeMs(), s.getErrorMessage(), s.getKafkaOffset());
     }
 
-    // Вызывается из async callback — отдельная транзакция
     private void markKafkaFailure(Long submissionId, String error) {
         submissionRepository.findById(submissionId).ifPresent(s -> {
             s.setStatus(SubmissionStatus.ERROR);
