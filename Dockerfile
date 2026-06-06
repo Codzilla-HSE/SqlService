@@ -1,11 +1,7 @@
 FROM gradle:8-jdk23-alpine AS builder
 WORKDIR /app
-
 COPY build.gradle settings.gradle ./
-COPY gradle/ gradle/
-
 RUN gradle dependencies --no-daemon || true
-
 COPY src/ src/
 RUN gradle build -x test --no-daemon
 
