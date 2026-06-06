@@ -3,6 +3,7 @@ package com.codzilla.sqlservice.SqlService.Service;
 import com.codzilla.sqlservice.SqlService.Dto.SqlExecutionResult;
 import com.codzilla.sqlservice.SqlService.model.TaskType;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
@@ -40,11 +41,14 @@ public class H2ExecutionService {
 
             long startTime = System.currentTimeMillis();
 
-            List<Map<String, Object>> rows;
+            List<Map<String, Object>> rows = List.of();
             if (taskType == TaskType.DML) {
+                try {
+                    jdbc.update(userSql); 
+                } catch (DataAccessException e) {
+                    throw e;
+                }
                 rows = selectAllFromTables(jdbc, tableNames);
-            } else {
-                rows = jdbc.queryForList(userSql);
             }
 
             long elapsed = System.currentTimeMillis() - startTime;
