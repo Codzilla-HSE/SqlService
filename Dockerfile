@@ -1,10 +1,16 @@
 FROM gradle:8-jdk23-alpine AS builder
 WORKDIR /app
-COPY . .
+
+COPY build.gradle settings.gradle ./
+COPY gradle/ gradle/
+
+RUN gradle dependencies --no-daemon || true
+
+COPY src/ src/
 RUN gradle build -x test --no-daemon
 
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:23-jre-alpine
 WORKDIR /app
 COPY --from=builder /app/build/libs/*.jar app.jar
-EXPOSE 8080
+EXPOSE 8082
 ENTRYPOINT ["java", "-jar", "app.jar"]
