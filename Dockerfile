@@ -1,4 +1,4 @@
-FROM gradle:8-jdk23-alpine AS builder
+FROM gradle:8.14-jdk23-alpine AS builder
 WORKDIR /app
 COPY build.gradle settings.gradle ./
 RUN gradle dependencies --no-daemon || true
