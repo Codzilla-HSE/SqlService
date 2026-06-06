@@ -1,5 +1,4 @@
-# Dockerfile (SqlService)
-FROM gradle:8-jdk21-alpine AS builder
+FROM gradle:8-jdk23-alpine AS builder
 WORKDIR /app
 COPY . .
 RUN gradle build -x test --no-daemon
