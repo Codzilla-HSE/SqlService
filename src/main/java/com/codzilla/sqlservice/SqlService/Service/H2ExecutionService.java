@@ -41,14 +41,13 @@ public class H2ExecutionService {
 
             long startTime = System.currentTimeMillis();
 
-            List<Map<String, Object>> rows = List.of();
+            List<Map<String, Object>> rows;
+
             if (taskType == TaskType.DML) {
-                try {
-                    jdbc.update(userSql); 
-                } catch (DataAccessException e) {
-                    throw e;
-                }
+                jdbc.update(userSql);
                 rows = selectAllFromTables(jdbc, tableNames);
+            } else {
+                rows = jdbc.queryForList(userSql);
             }
 
             long elapsed = System.currentTimeMillis() - startTime;
@@ -59,7 +58,6 @@ public class H2ExecutionService {
 
             log.debug("Submission {} executed in {}ms, {} rows", submissionId, elapsed, rows.size());
             return SqlExecutionResult.success(rows, elapsed);
-
         } catch (Exception e) {
             log.warn("SQL execution error for submission {}: {}", submissionId, e.getMessage());
             if (e.getMessage() != null && e.getMessage().contains("bad SQL grammar")) {
