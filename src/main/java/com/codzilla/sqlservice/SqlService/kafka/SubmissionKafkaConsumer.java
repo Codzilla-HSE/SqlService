@@ -178,6 +178,7 @@ public class SubmissionKafkaConsumer {
         try {
             validation = runValidation(task, correctResult.rows(), userResult.rows());
         } catch (Exception e) {
+            log.error("runValidation threw: {}", e.getMessage(), e);
             finalize(submission, SubmissionStatus.ERROR, SqlVerdict.SYSTEM_ERROR,
                     false, userResult.executionTimeMs(), "Validator error: " + e.getMessage());
             submissionRepository.save(submission);
@@ -227,7 +228,10 @@ public class SubmissionKafkaConsumer {
 
         if (task.getValidatorScriptKey() != null && !task.getValidatorScriptKey().isBlank()) {
             String code = minioService.downloadAsString(task.getValidatorScriptKey());
-            return validatorRunner.run(code, correctRows, userRows);
+            log.info("Running validator, code length={}", code.length());
+            ValidatorScriptRunner.ValidationResult result = validatorRunner.run(code, correctRows, userRows);
+            log.info("Validator done: accepted={}, error={}", result.accepted(), result.errorMessage());
+            return result;
         }
 
 
