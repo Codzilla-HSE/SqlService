@@ -42,8 +42,11 @@ public class ValidatorScriptRunner {
                 Iterable<? extends JavaFileObject> units =
                         fileManager.getJavaFileObjects(javaFile.toFile());
 
+
+                List<String> options = List.of("-classpath", buildClasspath());
+
                 boolean compiled = compiler
-                        .getTask(compilerOutput, fileManager, null, null, null, units)
+                        .getTask(compilerOutput, fileManager, null, options, null, units)
                         .call();
 
                 if (!compiled) {
@@ -107,5 +110,24 @@ public class ValidatorScriptRunner {
             return new ValidationResult(false, null, msg);
         }
         public boolean hasError() { return errorMessage != null; }
+    }
+
+    private String buildClasspath() {
+        try {
+            Path extractDir = Path.of("/tmp/sqlservice-cp");
+            if (!Files.exists(extractDir)) {
+                Files.createDirectories(extractDir);
+                ProcessBuilder pb = new ProcessBuilder("jar", "xf", "/app/app.jar");
+                pb.directory(extractDir.toFile());
+                pb.inheritIO();
+                pb.start().waitFor();
+            }
+            return extractDir + "/BOOT-INF/classes" +
+                    File.pathSeparator +
+                    extractDir + "/BOOT-INF/lib/*";
+        } catch (Exception e) {
+            log.error("Failed to build classpath: {}", e.getMessage());
+            return "/app/app.jar";
+        }
     }
 }
