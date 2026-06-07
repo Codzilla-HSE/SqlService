@@ -222,6 +222,9 @@ public class SubmissionKafkaConsumer {
             List<Map<String, Object>> correctRows,
             List<Map<String, Object>> userRows) {
 
+        log.info("correctRows: {}", correctRows);
+        log.info("userRows: {}", userRows);
+
         if (task.getValidatorScriptKey() != null && !task.getValidatorScriptKey().isBlank()) {
             String code = minioService.downloadAsString(task.getValidatorScriptKey());
             return validatorRunner.run(code, correctRows, userRows);
