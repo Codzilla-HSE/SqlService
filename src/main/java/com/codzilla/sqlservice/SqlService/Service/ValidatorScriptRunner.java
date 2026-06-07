@@ -65,8 +65,15 @@ public class ValidatorScriptRunner {
                     .getDeclaredConstructor()
                     .newInstance();
 
-            boolean accepted = validator.validate(correctRows, userRows);
+            boolean accepted;
+            try {
+                accepted = validator.validate(correctRows, userRows);
+            } catch (Exception e) {
+                log.error("Validator.validate() threw exception: {}", e.getMessage(), e);
+                return ValidationResult.error("Validator threw: " + e.getMessage());
+            }
             String message = accepted ? null : validator.failMessage(correctRows, userRows);
+            log.info("Validator result: accepted={}, message={}", accepted, message);
 
             log.debug("Validator {} result: {}", className, accepted);
             classLoader.close();
