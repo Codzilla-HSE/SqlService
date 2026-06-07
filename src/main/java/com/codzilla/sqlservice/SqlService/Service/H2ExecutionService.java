@@ -3,7 +3,6 @@ package com.codzilla.sqlservice.SqlService.Service;
 import com.codzilla.sqlservice.SqlService.Dto.SqlExecutionResult;
 import com.codzilla.sqlservice.SqlService.model.TaskType;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
@@ -36,8 +35,10 @@ public class H2ExecutionService {
             JdbcTemplate jdbc = new JdbcTemplate(db);
 
             executeScript(jdbc, initSql);
+            log.info("Init SQL executed for submission {}, initSql length={}", submissionId, initSql.length());
 
             List<String> tableNames = extractTableNames(initSql);
+            log.info("Tables found: {}", tableNames);
 
             long startTime = System.currentTimeMillis();
 
@@ -55,7 +56,7 @@ public class H2ExecutionService {
             if (elapsed > timeLimitMs) {
                 return SqlExecutionResult.timeLimitExceeded(elapsed);
             }
-
+            log.info("Rows returned for submission {}: {}", submissionId, rows.size());
             log.debug("Submission {} executed in {}ms, {} rows", submissionId, elapsed, rows.size());
             return SqlExecutionResult.success(rows, elapsed);
         } catch (Exception e) {
