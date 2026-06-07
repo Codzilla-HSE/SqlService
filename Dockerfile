@@ -7,7 +7,7 @@ RUN ./gradlew dependencies --no-daemon || true
 COPY src/ src/
 RUN ./gradlew build -x test --no-daemon
 
-FROM eclipse-temurin:23-jre-alpine
+FROM eclipse-temurin:23-jdk-alpine
 WORKDIR /app
 COPY --from=builder /app/build/libs/*.jar app.jar
 EXPOSE 8082
