@@ -88,4 +88,10 @@ public class TaskController {
             @RequestParam Task.TaskComplexity complexity) {
         return ResponseEntity.ok(new ApiResponse<>(true, taskService.getAllByComplexity(complexity), null));
     }
+
+    @GetMapping("/random")
+    public ResponseEntity<ApiResponse<Task>> getRandomTask(@RequestParam Task.TaskComplexity level) {
+        Task task = taskService.getRandomTaskByComplexity(level);
+        return ResponseEntity.ok(ApiResponse.ok(task));
+    }
 }

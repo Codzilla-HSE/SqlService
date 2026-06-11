@@ -103,4 +103,11 @@ public class TaskService {
         taskRepository.delete(task);
         log.info("Deleted task {}", taskId);
     }
+
+    // TaskService.java – добавить
+    @Transactional(readOnly = true)
+    public Task getRandomTaskByComplexity(Task.TaskComplexity complexity) {
+        return taskRepository.findRandomByComplexity(String.valueOf(complexity))
+                .orElseThrow(() -> new IllegalArgumentException("No tasks found for complexity: " + complexity));
+    }
 }
