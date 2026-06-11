@@ -118,23 +118,30 @@ public class ValidatorScriptRunner {
         }
         public boolean hasError() { return errorMessage != null; }
     }
-
     private String buildClasspath() {
-        try {
-            Path extractDir = Path.of("/tmp/sqlservice-cp");
-            if (!Files.exists(extractDir)) {
-                Files.createDirectories(extractDir);
-                ProcessBuilder pb = new ProcessBuilder("jar", "xf", "/app/app.jar");
-                pb.directory(extractDir.toFile());
-                pb.inheritIO();
-                pb.start().waitFor();
+        // Docker режим — fat jar в /app/app.jar
+        Path appJar = Path.of("/app/app.jar");
+        if (Files.exists(appJar)) {
+            try {
+                Path extractDir = Path.of("/tmp/sqlservice-cp");
+                if (!Files.exists(extractDir)) {
+                    Files.createDirectories(extractDir);
+                    ProcessBuilder pb = new ProcessBuilder("jar", "xf", "/app/app.jar");
+                    pb.directory(extractDir.toFile());
+                    pb.inheritIO();
+                    pb.start().waitFor();
+                }
+                return extractDir + "/BOOT-INF/classes" +
+                        File.pathSeparator +
+                        extractDir + "/BOOT-INF/lib/*";
+            } catch (Exception e) {
+                log.error("Failed to build docker classpath: {}", e.getMessage());
             }
-            return extractDir + "/BOOT-INF/classes" +
-                    File.pathSeparator +
-                    extractDir + "/BOOT-INF/lib/*";
-        } catch (Exception e) {
-            log.error("Failed to build classpath: {}", e.getMessage());
-            return "/app/app.jar";
         }
+
+        // Локальный запуск — системный classpath содержит всё
+        String cp = System.getProperty("java.class.path");
+        log.info("Compiler classpath (local): {}", cp);
+        return cp;
     }
 }

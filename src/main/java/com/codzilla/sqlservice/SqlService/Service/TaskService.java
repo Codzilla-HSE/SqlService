@@ -23,6 +23,7 @@ public class TaskService {
         Task task = Task.builder()
                 .title(req.title())
                 .type(req.type())
+                .complexity(req.complexity())
                 .description(req.description())
                 .correctSqlResponse(req.correctSqlQuery())
                 .timeLimitMs(req.timeLimitMs() != null ? req.timeLimitMs() : 30_000)
@@ -59,6 +60,11 @@ public class TaskService {
     @Transactional(readOnly = true)
     public List<Task> getAll() {
         return taskRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Task> getAllByComplexity(Task.TaskComplexity complexity) {
+        return taskRepository.findAllByComplexity(complexity);
     }
 
 

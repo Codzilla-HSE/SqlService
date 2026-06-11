@@ -82,4 +82,10 @@ public class TaskController {
         taskService.delete(id);
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
+
+    @GetMapping(params = "complexity")
+    public ResponseEntity<ApiResponse<List<Task>>> getByComplexity(
+            @RequestParam Task.TaskComplexity complexity) {
+        return ResponseEntity.ok(new ApiResponse<>(true, taskService.getAllByComplexity(complexity), null));
+    }
 }

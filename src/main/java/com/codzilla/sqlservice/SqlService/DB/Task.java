@@ -28,6 +28,9 @@ public class Task {
     @Enumerated(EnumType.STRING)
     private TaskType type;
 
+    @Enumerated(EnumType.STRING)
+    private TaskComplexity complexity;
+
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
@@ -49,5 +52,9 @@ public class Task {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+    }
+
+    public enum TaskComplexity {
+        EASY , MEDIUM , HARD
     }
 }
